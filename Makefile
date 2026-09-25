@@ -29,7 +29,7 @@ endif
 VERSION ?= $(shell git describe --tags --always 2>/dev/null | sed 's/^v//' || echo 0.1.0)
 DIST_DIR ?= dist
 
-.PHONY: all build install uninstall register test clean help package package-deb package-pkg package-tar dist
+.PHONY: all build install uninstall register test test-coverage clean help package package-deb package-pkg package-tar dist
 
 all: build
 
@@ -40,6 +40,7 @@ help:
 	@echo "sudo make install  - Install filter and all PPDs into system directories"
 	@echo "sudo make register - Register and enable default printer queue with CUPS"
 	@echo "make test          - Send a test page to $(PRINTER)"
+	@echo "make test-coverage - Run comprehensive unit & integration test suite with gcov"
 	@echo "sudo make uninstall- Remove printer queue and driver files"
 	@echo "make package       - Build OS-specific install package & distribution archives"
 	@echo "make package-deb   - Build Debian/Ubuntu .deb package"
@@ -105,6 +106,10 @@ test:
 		printf "========================================\n"; \
 	} | lpr -P $(PRINTER)
 	@echo "Job submitted."
+
+test-coverage:
+	@chmod +x tests/run_coverage.sh
+	./tests/run_coverage.sh
 
 uninstall:
 	lpadmin -x $(PRINTER) 2>/dev/null || true

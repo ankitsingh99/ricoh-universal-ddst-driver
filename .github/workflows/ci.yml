@@ -51,6 +51,11 @@ jobs:
           bash -n test_print.sh
           bash -n uninstall.sh
           bash -n packaging/*.sh
+          bash -n tests/*.sh
+
+      - name: Run Unit & Integration Test Suite with 95%+ Coverage Assertion
+        run: |
+          make test-coverage
 
       - name: Build Universal Driver Binaries
         run: |

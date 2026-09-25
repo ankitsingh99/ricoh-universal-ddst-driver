@@ -1,6 +1,8 @@
 # Binaries and object files
 rastertoricohddst
 rastertoricohjbig
+/*_cov
+*.dSYM/
 *.o
 *.out
 binaries/
@@ -25,3 +27,7 @@ SHA256SUMS*
 # Build logs & temp files
 *.log
 *.tmp
+*.gcda
+*.gcno
+*.gcov
+test_outputs/
