@@ -47,9 +47,36 @@ Consumer and SMB Ricoh DDST/GDI printers lack official Linux and macOS drivers a
 
 ---
 
-## Step-by-Step Usage & Configuration Guide
+## Pre-Built Packages & Installation Methods
 
-### Method 1: Automated Setup
+Pre-compiled binary packages and standalone installers are available for every release on the [**GitHub Releases Page**](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/releases).
+
+### Option A: macOS Installer Package (`.pkg`)
+Download the `.pkg` installer from [Releases](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/releases) and double-click to install, or install via Terminal:
+```bash
+sudo installer -pkg ricoh-universal-ddst-driver-<version>-macOS.pkg -target /
+```
+
+### Option B: Debian / Ubuntu Package (`.deb`)
+Download the `.deb` package for your architecture and install:
+```bash
+sudo dpkg -i ricoh-universal-ddst-driver_<version>_amd64.deb
+sudo apt-get install -f
+```
+
+### Option C: Standalone Release Tarball (`.tar.gz`)
+Download the pre-compiled binary tarball for your platform, extract, and run the automated setup:
+```bash
+tar -xzf ricoh-universal-ddst-driver-<version>-<os>-<arch>.tar.gz
+cd ricoh-universal-ddst-driver-<version>-<os>-<arch>
+./setup.sh
+```
+
+---
+
+## Step-by-Step Source Build & Configuration Guide
+
+### Method 1: Automated Source Setup
 
 1. Connect your Ricoh printer via USB and power it ON.
 2. Clone the repository and execute `./setup.sh`:
@@ -205,22 +232,47 @@ cancel -a
 
 ---
 
-## Repository Structure
-
 | File / Directory | Description |
 |---|---|
 | [`rastertoricohddst.c`](rastertoricohddst.c) | Native universal C source code for Ricoh DDST filter |
 | [`rastertoricohjbig.c`](rastertoricohjbig.c) | Legacy SP 200 filter (maintained for backward compatibility) |
 | [`ppd/`](ppd/) | Adobe-compliant PPD library covering SP 100, 110, 150, 200, 210, 230, 310 series |
+| [`packaging/`](packaging/) | Packaging automation scripts (`.deb`, `.pkg`, `.tar.gz`) |
 | [`setup.sh`](setup.sh) | Automated multi-model installer script |
 | [`test_print.sh`](test_print.sh) | Single-page diagnostic test print script |
 | [`uninstall.sh`](uninstall.sh) | Clean uninstallation script |
-| [`Makefile`](Makefile) | Multi-platform build and install system |
+| [`Makefile`](Makefile) | Multi-platform build, packaging, and install system |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Multi-OS GitHub Actions CI pipeline |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Automated multi-format package release pipeline |
 | [`AUTHORS.md`](AUTHORS.md) | Authors, upstream creators, and technical credits |
 | [`LICENSE`](LICENSE) | MIT License |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution & reverse engineering guidelines |
 | [`SECURITY.md`](SECURITY.md) | Security vulnerability disclosure policy |
+
+---
+
+## Building & Publishing Packages
+
+### Local Package Generation
+You can build packages locally using the Makefile:
+```bash
+# Build the native package for your OS (.pkg on macOS, .deb on Linux) + tarballs
+make package
+
+# Or build individual package formats
+make package-deb     # Debian / Ubuntu package
+make package-pkg     # macOS installer package
+make package-tar     # Binary and source distribution archives
+```
+All generated packages and checksums will be saved to the `dist/` directory.
+
+### Automated Publishing via GitHub Actions
+Creating and pushing a git release tag automatically triggers the Release CI workflow:
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+The workflow will compile binaries for Ubuntu and macOS, generate Debian packages (`.deb`), macOS installer packages (`.pkg`), standalone archives (`.tar.gz`), compute SHA-256 checksums, and publish them to GitHub Releases.
 
 ---
 

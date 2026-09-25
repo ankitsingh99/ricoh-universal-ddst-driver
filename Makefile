@@ -26,7 +26,10 @@ else
     LIBS         = $(CUPS_LIBS) -lcupsimage -ljbig
 endif
 
-.PHONY: all build install uninstall register test clean help
+VERSION ?= $(shell git describe --tags --always 2>/dev/null | sed 's/^v//' || echo 0.1.0)
+DIST_DIR ?= dist
+
+.PHONY: all build install uninstall register test clean help package package-deb package-pkg package-tar dist
 
 all: build
 
@@ -38,7 +41,11 @@ help:
 	@echo "sudo make register - Register and enable default printer queue with CUPS"
 	@echo "make test          - Send a test page to $(PRINTER)"
 	@echo "sudo make uninstall- Remove printer queue and driver files"
-	@echo "make clean         - Remove compiled binaries"
+	@echo "make package       - Build OS-specific install package & distribution archives"
+	@echo "make package-deb   - Build Debian/Ubuntu .deb package"
+	@echo "make package-pkg   - Build macOS .pkg installer package"
+	@echo "make package-tar   - Build source and binary tarballs"
+	@echo "make clean         - Remove compiled binaries and dist files"
 
 build: $(FILTER) $(LEGACY_FILTER)
 
@@ -108,5 +115,29 @@ ifeq ($(UNAME), Darwin)
 endif
 	@echo "Uninstalled."
 
+package-tar:
+	@chmod +x packaging/build_tarball.sh
+	./packaging/build_tarball.sh "$(VERSION)" "$(DIST_DIR)"
+
+package-deb:
+	@chmod +x packaging/build_deb.sh
+	./packaging/build_deb.sh "$(VERSION)" "$(DIST_DIR)"
+
+package-pkg:
+	@chmod +x packaging/build_pkg.sh
+	./packaging/build_pkg.sh "$(VERSION)" "$(DIST_DIR)"
+
+ifeq ($(UNAME), Darwin)
+package: package-pkg package-tar
+else
+package: package-deb package-tar
+endif
+
+dist: package
+
+docker-build:
+	docker build -t ghcr.io/ankitsingh99/ricoh-universal-ddst-driver:$(VERSION) -t ghcr.io/ankitsingh99/ricoh-universal-ddst-driver:latest .
+
 clean:
 	rm -f $(FILTER) $(LEGACY_FILTER)
+	rm -rf $(DIST_DIR) build

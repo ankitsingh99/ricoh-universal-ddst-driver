@@ -50,6 +50,7 @@ jobs:
           bash -n setup.sh
           bash -n test_print.sh
           bash -n uninstall.sh
+          bash -n packaging/*.sh
 
       - name: Build Universal Driver Binaries
         run: |
@@ -61,3 +62,8 @@ jobs:
           test -f rastertoricohddst
           test -f rastertoricohjbig
           file rastertoricohddst rastertoricohjbig
+
+      - name: Test Package Generation
+        run: |
+          make package
+          ls -lh dist/

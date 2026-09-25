@@ -1,0 +1,220 @@
+name: Release Packages
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version tag (e.g. 0.1.0 or v0.1.0)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish-container-package:
+    name: Publish GitHub Container Package (ghcr.io)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push container image to GitHub Packages
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+  build-linux:
+    name: Build Linux (.deb & tarball)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Version
+        id: get_version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VER="${{ github.event.inputs.version }}"
+          elif [ -n "${{ github.ref_name }}" ]; then
+            VER="${{ github.ref_name }}"
+          else
+            VER="0.1.0"
+          fi
+          VER="${VER#v}"
+          echo "version=${VER}" >> "$GITHUB_OUTPUT"
+          echo "Building version: ${VER}"
+
+      - name: Install Linux Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcups2-dev \
+            libcupsimage2-dev \
+            libjbig-dev \
+            jbigkit-bin \
+            cups-client \
+            cups \
+            ghostscript \
+            gcc \
+            dpkg-dev
+
+      - name: Validate PPDs
+        run: |
+          cupstestppd -W filters ppd/*.ppd ricoh-sp200.ppd
+
+      - name: Build Debian Package (.deb)
+        run: |
+          chmod +x packaging/*.sh
+          ./packaging/build_deb.sh "${{ steps.get_version.outputs.version }}" dist
+
+      - name: Build Linux Release Archives
+        run: |
+          ./packaging/build_tarball.sh "${{ steps.get_version.outputs.version }}" dist
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: dist/*
+          retention-days: 1
+
+  build-macos:
+    name: Build macOS (.pkg & tarball)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Version
+        id: get_version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VER="${{ github.event.inputs.version }}"
+          elif [ -n "${{ github.ref_name }}" ]; then
+            VER="${{ github.ref_name }}"
+          else
+            VER="0.1.0"
+          fi
+          VER="${VER#v}"
+          echo "version=${VER}" >> "$GITHUB_OUTPUT"
+          echo "Building version: ${VER}"
+
+      - name: Install macOS Dependencies
+        run: |
+          brew install cups jbigkit ghostscript
+
+      - name: Validate PPDs
+        run: |
+          cupstestppd -W filters ppd/*.ppd ricoh-sp200.ppd
+
+      - name: Build macOS PKG Installer
+        run: |
+          chmod +x packaging/*.sh
+          ./packaging/build_pkg.sh "${{ steps.get_version.outputs.version }}" dist
+
+      - name: Build macOS Release Archives
+        run: |
+          ./packaging/build_tarball.sh "${{ steps.get_version.outputs.version }}" dist
+
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-packages
+          path: dist/*
+          retention-days: 1
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create dist directory
+        run: mkdir -p dist
+
+      - name: Download Linux Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: dist/
+
+      - name: Download macOS Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-packages
+          path: dist/
+
+      - name: Generate Checksums (SHA-256)
+        run: |
+          cd dist
+          # Remove duplicate source tarballs if both jobs generated one
+          sha256sum * > SHA256SUMS.txt || true
+          cat SHA256SUMS.txt
+
+      - name: Determine Tag Name
+        id: release_tag
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            TAG="v${{ github.event.inputs.version }}"
+            TAG="v${TAG#v}"
+          elif [ -n "${{ github.ref_name }}" ]; then
+            TAG="${{ github.ref_name }}"
+          else
+            TAG="v0.1.0"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          name: Ricoh Universal DDST Driver ${{ steps.release_tag.outputs.tag }}
+          files: |
+            dist/*.deb
+            dist/*.pkg
+            dist/*.tar.gz
+            dist/*.zip
+            dist/SHA256SUMS.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: false

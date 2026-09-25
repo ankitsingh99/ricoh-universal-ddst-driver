@@ -1,8 +1,19 @@
 # Binaries and object files
+rastertoricohddst
 rastertoricohjbig
 *.o
 *.out
 binaries/
+
+# Packages and distribution artifacts
+dist/
+build/
+packages/
+*.deb
+*.pkg
+*.tar.gz
+*.zip
+SHA256SUMS*
 
 # OS and Editor artifacts
 .DS_Store
