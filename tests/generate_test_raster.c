@@ -95,6 +95,15 @@ int main(int argc, char* argv[])
         }
 
         hdr.cupsBytesPerLine = (hdr.cupsWidth * hdr.cupsBitsPerPixel + 7) / 8;
+        hdr.cupsBitsPerColor = (hdr.cupsBitsPerPixel >= 8) ? 8 : 1;
+        hdr.cupsNumColors = (hdr.cupsBitsPerPixel == 24) ? 3 : 1;
+        hdr.cupsRowCount = 1;
+        hdr.cupsRowFeed = 1;
+        hdr.cupsRowStep = 1;
+        hdr.cupsImagingBBox[0] = 0;
+        hdr.cupsImagingBBox[1] = 0;
+        hdr.cupsImagingBBox[2] = hdr.PageSize[0];
+        hdr.cupsImagingBBox[3] = hdr.PageSize[1];
 
         if (!cupsRasterWriteHeader2(ras, &hdr)) {
             fprintf(stderr, "Failed to write header\n");
