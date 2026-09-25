@@ -112,16 +112,26 @@ STATIC void write_job_header(int copies, int duplex, int tumble, const char* tra
     }
 }
 
-/* Count black pixels across a 1-bit packed bitmap (for DOTCOUNT). */
+#include <stdint.h>
+
+/* Count black pixels across a 1-bit packed bitmap using 64-bit popcount */
 STATIC unsigned long count_dots(const unsigned char* bmp, unsigned w, unsigned h)
 {
     unsigned stride = (w + 7) / 8;
+    size_t total_bytes = (size_t)stride * h;
+    size_t u64_count = total_bytes / sizeof(uint64_t);
+    const uint64_t* p64 = (const uint64_t*)(const void*)bmp;
     unsigned long n = 0;
-    for (unsigned y = 0; y < h; y++) {
-        for (unsigned x = 0; x < stride; x++) {
-            n += (unsigned long)__builtin_popcount(bmp[y * stride + x]);
-        }
+
+    for (size_t i = 0; i < u64_count; i++) {
+        n += (unsigned long)__builtin_popcountll(p64[i]);
     }
+
+    const unsigned char* p8 = bmp + u64_count * sizeof(uint64_t);
+    for (size_t i = 0; i < total_bytes % sizeof(uint64_t); i++) {
+        n += (unsigned long)__builtin_popcount(p8[i]);
+    }
+
     return n;
 }
 
@@ -132,7 +142,10 @@ STATIC void write_page(unsigned char* bmp, unsigned w, unsigned h,
     const char* paper, int first_page,
     unsigned dpi, int copies, const char* tray)
 {
-    Buf buf = { (unsigned char*)MALLOC(1 << 17), 0, 1 << 17 };
+    size_t initial_cap = (w * h / 16) + 4096;
+    if (initial_cap < (1 << 17)) initial_cap = (1 << 17);
+
+    Buf buf = { (unsigned char*)MALLOC(initial_cap), 0, initial_cap };
     if (!buf.data) {
         fprintf(stderr, "ERROR: rastertoricohddst: Out of memory allocating page buffer\n");
         return;
@@ -268,19 +281,45 @@ int main(int argc, char* argv[])
                 if (fd != 0) close(fd);
                 return 1;
             }
-            for (unsigned y = 0; y < h; y++) {
-                for (unsigned x = 0; x < w; x++) {
-                    unsigned char px;
-                    if (bpp == 8) {
-                        px = bmp[y * stride + x];
-                    } else {
-                        px = (unsigned char)(((unsigned)bmp[y * stride + x * 3] +
-                            bmp[y * stride + x * 3 + 1] +
-                            bmp[y * stride + x * 3 + 2]) / 3);
+
+            int is_cspace_k = (cspace == 3);
+
+            if (bpp == 8) {
+                for (unsigned y = 0; y < h; y++) {
+                    const unsigned char* src = bmp + y * stride;
+                    unsigned char* dst = bmp1 + y * stride1;
+                    for (unsigned x = 0; x < w; ) {
+                        unsigned char acc = 0;
+                        for (int bit = 0; bit < 8 && x < w; bit++, x++) {
+                            unsigned char px = src[x];
+                            int black = is_cspace_k ? (px > 128) : (px < 128);
+                            acc = (unsigned char)((acc << 1) | (black ? 1 : 0));
+                        }
+                        if (x >= w && (w & 7) != 0) {
+                            acc <<= (8 - (w & 7));
+                        }
+                        *dst++ = acc;
                     }
-                    int black = (cspace == 3) ? (px > 128) : (px < 128);
-                    if (black) {
-                        bmp1[y * stride1 + x / 8] |= (0x80 >> (x & 7));
+                }
+            } else {
+                /* 24-bit RGB with fast ITU-R BT.601 integer luminance */
+                for (unsigned y = 0; y < h; y++) {
+                    const unsigned char* src = bmp + y * stride;
+                    unsigned char* dst = bmp1 + y * stride1;
+                    for (unsigned x = 0; x < w; ) {
+                        unsigned char acc = 0;
+                        for (int bit = 0; bit < 8 && x < w; bit++, x++) {
+                            unsigned r = src[x * 3];
+                            unsigned g = src[x * 3 + 1];
+                            unsigned b_val = src[x * 3 + 2];
+                            unsigned char px = (unsigned char)((r * 77 + g * 150 + b_val * 29) >> 8);
+                            int black = is_cspace_k ? (px > 128) : (px < 128);
+                            acc = (unsigned char)((acc << 1) | (black ? 1 : 0));
+                        }
+                        if (x >= w && (w & 7) != 0) {
+                            acc <<= (8 - (w & 7));
+                        }
+                        *dst++ = acc;
                     }
                 }
             }
