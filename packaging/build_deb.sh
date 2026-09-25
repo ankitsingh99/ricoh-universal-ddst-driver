@@ -6,6 +6,16 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="${1:-$(git describe --tags --always 2>/dev/null | sed 's/^v//' || echo "0.1.0")}"
+
+# Debian versions must start with a digit. Convert commit-only versions
+# such as "d8b9853" into a valid version such as "0.0.0+git.d8b9853".
+if [[ ! "${VERSION}" =~ ^[0-9] ]]; then
+    VERSION="0.0.0+git.${VERSION}"
+fi
+
+# Keep the generated version within Debian's permitted character set.
+VERSION="$(printf '%s' "${VERSION}" | sed 's/[^0-9A-Za-z.+~-]/./g')"
+
 DEB_OUTPUT_DIR="${2:-${SCRIPT_DIR}/dist}"
 mkdir -p "${DEB_OUTPUT_DIR}"
 DEB_OUTPUT_DIR="$(cd "${DEB_OUTPUT_DIR}" && pwd)"
