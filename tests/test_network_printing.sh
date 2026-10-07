@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+    #!/usr/bin/env bash
 # ==============================================================================
 # Ricoh DDST Driver - Network & Mobile Printing Integration Test Suite
 # Validates IPP remote endpoints, AirPrint mDNS registration, offline spooling,
