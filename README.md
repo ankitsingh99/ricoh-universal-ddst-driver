@@ -255,10 +255,19 @@ cancel -a
 
 ## Architecture & Technical Protocol
 
+For the complete in-depth engineering specification, protocol breakdown, and sequence diagrams, refer to **[SYSTEM_DESIGN.md](SYSTEM_DESIGN.md)**.
+
 ```
+                  +-----------------------------------------------------------+
+                  |         Client Tier (Mobile, Desktop, Network IPP)        |
+                  |     iOS AirPrint, Android Mopria, macOS, Linux, Windows   |
+                  +-----------------------------+-----------------------------+
+                                                |
+                                                v
                   +-----------------------------------------------------------+
                   |                 CUPS Print Framework                      |
                   |        (Input: application/vnd.cups-raster)                |
+                  |        ErrorPolicy: retry-current-job (Offline Hold)       |
                   +-----------------------------+-----------------------------+
                                                 |
                                                 v
@@ -268,7 +277,8 @@ cancel -a
                   | 1. Model Profile & PPD parser (Tray, Duplex, Resolution)  |
                   | 2. Color Conversion Engine (1-bit Monochrome)             |
                   | 3. ITU-T T.82 JBIG1 Compression via libjbig               |
-                  | 4. PJL Stream Builder & Dynamic Dot Counter               |
+                  | 4. 64-bit Hardware Popcount Engine (DOTCOUNT)             |
+                  | 5. PJL Stream Builder & Dynamic Header Injection          |
                   +-----------------------------+-----------------------------+
                                                 |
                                                 v
@@ -278,13 +288,22 @@ cancel -a
                   +-----------------------------------------------------------+
 ```
 
+### Key Technical Innovations
+1. **Universal Multi-Model Engine**: A single high-performance C filter handles all Ricoh monochrome laser families (SP 100 through SP 3710) using dynamic PPD parameterization.
+2. **ITU-T T.82 JBIG1 Bi-Level Compression**: Employs `libjbig` with options `0x48` and order `0x03` to stream high-density binary stripes directly to the laser print engine.
+3. **Hardware-Accelerated Dot Counting**: Utilizes `__builtin_popcountll` 64-bit CPU intrinsics to calculate per-page `@PJL SET DOTCOUNT=...` values across rasters with zero throughput bottleneck.
+4. **Resilient Network Spooling**: Uses `retry-current-job` error policies and persistent mDNS LaunchAgents/Avahi services to allow 24/7 mobile print discovery and offline job retention until USB reconnect.
+
 ---
 
 | File / Directory | Description |
 |---|---|
+| [`SYSTEM_DESIGN.md`](SYSTEM_DESIGN.md) | Comprehensive technical architecture & system design document |
 | [`rastertoricohddst.c`](rastertoricohddst.c) | Native universal C source code for Ricoh DDST filter |
 | [`rastertoricohjbig.c`](rastertoricohjbig.c) | Legacy SP 200 filter (maintained for backward compatibility) |
+| [`enable_network_printing.sh`](enable_network_printing.sh) | AirPrint & IPP network printing configuration utility |
 | [`ppd/`](ppd/) | Adobe-compliant PPD library covering SP 100, 110, 150, 200, 210, 230, 310 series |
+| [`tests/`](tests/) | Unit, coverage, and network integration test suite |
 | [`packaging/`](packaging/) | Packaging automation scripts (`.deb`, `.pkg`, `.tar.gz`) |
 | [`setup.sh`](setup.sh) | Automated multi-model installer script |
 | [`test_print.sh`](test_print.sh) | Single-page diagnostic test print script |
@@ -296,6 +315,25 @@ cancel -a
 | [`LICENSE`](LICENSE) | MIT License |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution & reverse engineering guidelines |
 | [`SECURITY.md`](SECURITY.md) | Security vulnerability disclosure policy |
+
+---
+
+## Testing & Quality Assurance
+
+The project enforces strict code quality and integration testing:
+
+```bash
+# 1. Run unit test suite with strict >= 95% line coverage assertion
+make test-coverage
+
+# 2. Run mobile & network printing integration tests
+make test-network
+
+# 3. Send a single diagnostic test page to the registered printer
+make test
+# or:
+./test_print.sh
+```
 
 ---
 
