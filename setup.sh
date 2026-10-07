@@ -174,10 +174,11 @@ fi
 echo "Registering printer queue '$PRINTER_NAME' with PPD: $(basename "$SELECTED_PPD")..."
 sudo lpadmin -x "$PRINTER_NAME" 2>/dev/null || true
 sudo lpadmin -p "$PRINTER_NAME" -v "$DEVICE_URI" -P "$SELECTED_PPD" -E
+sudo lpadmin -p "$PRINTER_NAME" -o printer-is-shared=true -o printer-error-policy=retry-current-job 2>/dev/null || true
 sudo cupsenable "$PRINTER_NAME" 2>/dev/null || true
 sudo cupsaccept "$PRINTER_NAME" 2>/dev/null || true
 
-echo "  [OK] Printer '$PRINTER_NAME' registered and enabled."
+echo "  [OK] Printer '$PRINTER_NAME' registered, shared, and enabled."
 
 # ------------------------------------------------------------------------------
 # 5. Status & Completion
@@ -199,4 +200,7 @@ echo "  To send a test page:"
 echo "    echo 'Hello from Ricoh Driver Suite' | lpr -P $PRINTER_NAME"
 echo "  or run:"
 echo "    ./test_print.sh"
+echo ""
+echo "  To enable Mobile & AirPrint Network Printing (iOS & Android):"
+echo "    ./enable_network_printing.sh"
 echo "========================================================"

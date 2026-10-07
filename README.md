@@ -157,6 +157,54 @@ Once you run `sudo make install`:
 
 ---
 
+## Mobile & Network Printing (iOS AirPrint & Android)
+
+You can share your USB-connected Ricoh printer with **any smartphone, tablet, or computer on your local Wi-Fi network**.
+
+### Key Features
+- **Always Discoverable**: The printer appears in your phone's print menu 24/7, even if the physical Ricoh printer is turned off or disconnected from USB.
+- **Offline Spooling**: Print jobs sent from your phone are safely received and queued on your MacBook.
+- **Automatic Printing on Connect**: As soon as you power ON the printer or plug the USB cable into your MacBook, all queued jobs print immediately.
+
+### Enabling Network & Mobile Printing
+Run the automated configuration script:
+```bash
+./enable_network_printing.sh
+# or via Make:
+make enable-sharing
+```
+
+To check status, connected IP addresses, and queued jobs:
+```bash
+./enable_network_printing.sh --status
+# or:
+make status-sharing
+```
+
+To disable network sharing and stop mDNS advertisement:
+```bash
+./enable_network_printing.sh --disable
+# or:
+make disable-sharing
+```
+
+### Printing from Devices
+1. **iPhone & iPad (AirPrint)**:
+   - Connect your iOS device to the same Wi-Fi network as your MacBook.
+   - Tap **Share** -> **Print** in any app (Safari, Photos, Mail, Files).
+   - Select **`Ricoh SP 200 (AirPrint)`** (or your detected model).
+   - Tap **Print**.
+2. **Android Phones & Tablets**:
+   - Open any document or webpage -> tap **Print**.
+   - Your Android device will discover the printer via the Default Print Service or Mopria over IPP.
+3. **Other Computers (macOS, Windows, Linux)**:
+   - Add a network printer using the IPP address:
+     ```text
+     ipp://<macbook-ip>:631/printers/Ricoh_SP_200_DDST
+     ```
+
+---
+
 ## Prerequisites & Dependencies
 
 ### macOS (Homebrew)

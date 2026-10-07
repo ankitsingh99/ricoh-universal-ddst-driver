@@ -50,6 +50,7 @@ jobs:
           bash -n setup.sh
           bash -n test_print.sh
           bash -n uninstall.sh
+          bash -n enable_network_printing.sh
           bash -n packaging/*.sh
           bash -n tests/*.sh
 

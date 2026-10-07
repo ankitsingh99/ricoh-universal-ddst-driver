@@ -29,18 +29,22 @@ endif
 VERSION ?= $(shell git describe --tags --always 2>/dev/null | sed 's/^v//' || echo 0.1.0)
 DIST_DIR ?= dist
 
-.PHONY: all build install uninstall register test test-coverage clean help package package-deb package-pkg package-tar dist
+.PHONY: all build install uninstall register test test-coverage test-network enable-sharing disable-sharing status-sharing clean help package package-deb package-pkg package-tar dist
 
 all: build
 
 help:
 	@echo "Ricoh Universal DDST/GDI Driver Suite Makefile"
 	@echo "-----------------------------------------------"
-	@echo "make build         - Compile the CUPS raster filter binary"
-	@echo "sudo make install  - Install filter and all PPDs into system directories"
-	@echo "sudo make register - Register and enable default printer queue with CUPS"
-	@echo "make test          - Send a test page to $(PRINTER)"
-	@echo "make test-coverage - Run comprehensive unit & integration test suite with gcov"
+	@echo "make build          - Compile the CUPS raster filter binary"
+	@echo "sudo make install   - Install filter and all PPDs into system directories"
+	@echo "sudo make register  - Register and enable default printer queue with CUPS"
+	@echo "make enable-sharing - Enable AirPrint & IPP network printing for mobile devices"
+	@echo "make status-sharing - Check network sharing, queue, and mDNS status"
+	@echo "make disable-sharing- Disable network sharing and stop mDNS advertisement"
+	@echo "make test           - Send a test page to $(PRINTER)"
+	@echo "make test-coverage  - Run comprehensive unit & integration test suite with gcov"
+	@echo "make test-network   - Run mobile & network printing integration tests"
 	@echo "sudo make uninstall- Remove printer queue and driver files"
 	@echo "make package       - Build OS-specific install package & distribution archives"
 	@echo "make package-deb   - Build Debian/Ubuntu .deb package"
@@ -92,6 +96,7 @@ register:
 	fi; \
 	lpadmin -x $(PRINTER) 2>/dev/null || true; \
 	lpadmin -p $(PRINTER) -v "$$URI" -P $(PPD_DIR)/ricoh-sp200.ppd -E && \
+	lpadmin -p $(PRINTER) -o printer-is-shared=true -o printer-error-policy=retry-current-job 2>/dev/null || true; \
 	cupsenable $(PRINTER) 2>/dev/null || true; \
 	cupsaccept $(PRINTER) 2>/dev/null || true; \
 	echo "Printer '$(PRINTER)' registered and enabled at $$URI."
@@ -110,6 +115,22 @@ test:
 test-coverage:
 	@chmod +x tests/run_coverage.sh
 	./tests/run_coverage.sh
+
+test-network:
+	@chmod +x tests/test_network_printing.sh
+	./tests/test_network_printing.sh
+
+enable-sharing:
+	@chmod +x enable_network_printing.sh
+	./enable_network_printing.sh --enable --printer $(PRINTER)
+
+disable-sharing:
+	@chmod +x enable_network_printing.sh
+	./enable_network_printing.sh --disable --printer $(PRINTER)
+
+status-sharing:
+	@chmod +x enable_network_printing.sh
+	./enable_network_printing.sh --status --printer $(PRINTER)
 
 uninstall:
 	lpadmin -x $(PRINTER) 2>/dev/null || true
