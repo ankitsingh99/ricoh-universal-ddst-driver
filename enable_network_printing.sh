@@ -104,6 +104,19 @@ enable_sharing() {
         echo "  [OK] CUPS printer sharing and remote access enabled."
     else
         echo "  [WARN] cupsctl not found. Ensure cupsd is configured to listen on port 631."
+        # Attempt to enable TLS if cupsctl missing by configuring cupsd directly
+        sudo mkdir -p /etc/cups/ssl
+        if [ ! -f /etc/cups/ssl/server.crt ] || [ ! -f /etc/cups/ssl/server.key ]; then
+            echo "Generating self-signed certificate for CUPS..."
+            sudo openssl req -new -x509 -days 3650 -nodes -out /etc/cups/ssl/server.crt -keyout /etc/cups/ssl/server.key -subj "/CN=$(hostname)"
+            sudo chmod 600 /etc/cups/ssl/server.key
+            sudo chmod 644 /etc/cups/ssl/server.crt
+            sudo sed -i.bak '/^#*ServerCertificate/c\ServerCertificate /etc/cups/ssl/server.crt' /etc/cups/cupsd.conf
+            sudo sed -i.bak '/^#*ServerKey/c\ServerKey /etc/cups/ssl/server.key' /etc/cups/cupsd.conf
+        fi
+        sudo sed -i.bak '/^#*DefaultEncryption/c\DefaultEncryption Required' /etc/cups/cupsd.conf
+        echo "  [INFO] TLS configuration added to CUPS."
+
     fi
 
     # 2. Configure printer queue options
@@ -117,6 +130,31 @@ enable_sharing() {
 
     # 3. Setup persistent AirPrint / IPP mDNS broadcast
     echo "[3/4] Setting up persistent mDNS AirPrint / IPP advertisement..."
+    # Advertise TLS support via mDNS (Apple AirPrint uses txt record "TLS=1")
+    if [ "$OS" = "Darwin" ]; then
+        # On macOS, CUPS automatically adds required TXT records; ensure TLS flag
+        sudo defaults write /Library/Preferences/com.apple.CUPS.plist TLSEnabled -bool true || true
+    else
+        # For avahi (Linux), create a service file with TLS flag
+        sudo mkdir -p $(dirname "$AVAHI_SERVICE_FILE")
+        cat <<EOF > "$AVAHI_SERVICE_FILE"
+<?xml version="1.0"?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name replace-wildcards="yes">%h Ricoh AirPrint</name>
+  <service>
+    <type>_ipp._tcp</type>
+    <port>631</port>
+    <txt-record>txtvers=1</txt-record>
+    <txt-record>qtotal=1</txt-record>
+    <txt-record>rp=${q}</txt-record>
+    <txt-record>ty=$(get_friendly_name "$q")</txt-record>
+    <txt-record>TLS=1</txt-record>
+  </service>
+</service-group>
+EOF
+        sudo avahi-daemon --reload || sudo systemctl restart avahi-daemon
+    fi
     if [ "$OS" = "Darwin" ]; then
         mkdir -p "$LAUNCHAGENT_DIR"
         cat << EOF > "$LAUNCHAGENT_PLIST"
