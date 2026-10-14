@@ -12,21 +12,33 @@ trap 'rm -rf "${TMP_DIR}"' EXIT
 cd "${SCRIPT_DIR}"
 
 UNAME="$(uname -s)"
-if [ "$UNAME" = "Darwin" ]; then
-    BREW_PREFIX="$(brew --prefix 2>/dev/null || echo /opt/homebrew)"
-    CPPFLAGS="-I${BREW_PREFIX}/include"
-    LDFLAGS="-L${BREW_PREFIX}/lib"
-    LIBS="-lcups -lcupsimage -ljbig"
+if [ -n "${CC:-}" ] && command -v "$CC" >/dev/null 2>&1; then
+    COMPILER="$CC"
+elif command -v gcc >/dev/null 2>&1; then
+    COMPILER="gcc"
+elif command -v clang >/dev/null 2>&1; then
+    COMPILER="clang"
+elif command -v cc >/dev/null 2>&1; then
+    COMPILER="cc"
 else
-    CPPFLAGS="$(cups-config --cflags 2>/dev/null || true)"
-    LIBS="$(cups-config --libs 2>/dev/null || echo -lcups) -lcupsimage -ljbig"
-    LDFLAGS=""
+    COMPILER="cc"
 fi
+
+CPPFLAGS="-I/usr/local/include -I/usr/pkg/include -I/opt/homebrew/include"
+LDFLAGS="-L/usr/local/lib -L/usr/pkg/lib -L/opt/homebrew/lib"
+
+if command -v cups-config >/dev/null 2>&1; then
+    CPPFLAGS="$CPPFLAGS $(cups-config --cflags 2>/dev/null || true)"
+    CUPS_LIBS="$(cups-config --libs 2>/dev/null || echo -lcups)"
+else
+    CUPS_LIBS="-lcups"
+fi
+LIBS="$CUPS_LIBS -lcupsimage -ljbig"
 
 echo "========================================================"
 echo " Running Ricoh DDST Driver Test & Coverage Suite"
 echo " Target Code Coverage: >= 95%"
-echo " Detected OS: ${UNAME}"
+echo " Detected OS: ${UNAME} | Compiler: ${COMPILER}"
 echo "========================================================"
 
 # 1. Clean previous coverage files
@@ -34,7 +46,7 @@ rm -f *.gcda *.gcno *.gcov *.o
 
 # 2. Build test raster generator
 echo "[1/5] Building test raster generator..."
-gcc -O2 ${CPPFLAGS} ${LDFLAGS} -o "${TMP_DIR}/generate_test_raster" "${TEST_DIR}/generate_test_raster.c" ${LIBS}
+$COMPILER -O2 ${CPPFLAGS} ${LDFLAGS} -o "${TMP_DIR}/generate_test_raster" "${TEST_DIR}/generate_test_raster.c" ${LIBS}
 
 # 3. Generate test streams
 echo "[2/5] Generating test raster streams..."
@@ -51,20 +63,20 @@ echo "Corrupt raster data" > "${TMP_DIR}/corrupt.ras"
 
 # 4. Build filters with coverage instrumentation
 echo "[3/5] Compiling filter binaries with coverage instrumentation..."
-gcc -O0 -g ${CPPFLAGS} -c "${TEST_DIR}/test_mocks.c" -o "${TMP_DIR}/test_mocks.o"
+$COMPILER -O0 -g ${CPPFLAGS} -c "${TEST_DIR}/test_mocks.c" -o "${TMP_DIR}/test_mocks.o"
 
-gcc -O0 -g --coverage -DSTATIC="" -DTESTING -Dmain=driver_main_ddst ${CPPFLAGS} -c rastertoricohddst.c -o rastertoricohddst.o
-gcc --coverage rastertoricohddst.o "${TMP_DIR}/test_mocks.o" -Ddriver_main=driver_main_ddst "${TEST_DIR}/main_driver.c" ${LDFLAGS} -o "${TMP_DIR}/rastertoricohddst" ${LIBS}
+$COMPILER -O0 -g --coverage -DSTATIC="" -DTESTING -Dmain=driver_main_ddst ${CPPFLAGS} -c rastertoricohddst.c -o rastertoricohddst.o
+$COMPILER --coverage rastertoricohddst.o "${TMP_DIR}/test_mocks.o" -Ddriver_main=driver_main_ddst "${TEST_DIR}/main_driver.c" ${LDFLAGS} -o "${TMP_DIR}/rastertoricohddst" ${LIBS}
 
-gcc -O0 -g --coverage -DSTATIC="" -DTESTING -Dmain=driver_main_jbig ${CPPFLAGS} -c rastertoricohjbig.c -o rastertoricohjbig.o
-gcc --coverage rastertoricohjbig.o "${TMP_DIR}/test_mocks.o" -Ddriver_main=driver_main_jbig "${TEST_DIR}/main_driver.c" ${LDFLAGS} -o "${TMP_DIR}/rastertoricohjbig" ${LIBS}
+$COMPILER -O0 -g --coverage -DSTATIC="" -DTESTING -Dmain=driver_main_jbig ${CPPFLAGS} -c rastertoricohjbig.c -o rastertoricohjbig.o
+$COMPILER --coverage rastertoricohjbig.o "${TMP_DIR}/test_mocks.o" -Ddriver_main=driver_main_jbig "${TEST_DIR}/main_driver.c" ${LDFLAGS} -o "${TMP_DIR}/rastertoricohjbig" ${LIBS}
 
 # Build unit test runners linking against the instrumented object files
-gcc ${CPPFLAGS} -c "${TEST_DIR}/test_unit_ddst.c" -o "${TMP_DIR}/test_unit_ddst.o"
-gcc --coverage "${TMP_DIR}/test_unit_ddst.o" rastertoricohddst.o "${TMP_DIR}/test_mocks.o" ${LDFLAGS} -o "${TMP_DIR}/test_unit_ddst" ${LIBS}
+$COMPILER ${CPPFLAGS} -c "${TEST_DIR}/test_unit_ddst.c" -o "${TMP_DIR}/test_unit_ddst.o"
+$COMPILER --coverage "${TMP_DIR}/test_unit_ddst.o" rastertoricohddst.o "${TMP_DIR}/test_mocks.o" ${LDFLAGS} -o "${TMP_DIR}/test_unit_ddst" ${LIBS}
 
-gcc ${CPPFLAGS} -c "${TEST_DIR}/test_unit_jbig.c" -o "${TMP_DIR}/test_unit_jbig.o"
-gcc --coverage "${TMP_DIR}/test_unit_jbig.o" rastertoricohjbig.o "${TMP_DIR}/test_mocks.o" ${LDFLAGS} -o "${TMP_DIR}/test_unit_jbig" ${LIBS}
+$COMPILER ${CPPFLAGS} -c "${TEST_DIR}/test_unit_jbig.c" -o "${TMP_DIR}/test_unit_jbig.o"
+$COMPILER --coverage "${TMP_DIR}/test_unit_jbig.o" rastertoricohjbig.o "${TMP_DIR}/test_mocks.o" ${LDFLAGS} -o "${TMP_DIR}/test_unit_jbig" ${LIBS}
 
 # 5. Execute integration & unit test cases
 echo "[4/5] Executing test suite against rastertoricohddst..."

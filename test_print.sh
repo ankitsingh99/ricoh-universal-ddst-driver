@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ==============================================================================
 # Ricoh DDST Driver Suite - Test Print Script
+# Compatible with Linux, FreeBSD, OpenBSD, NetBSD, macOS, and Unix
 # ==============================================================================
 
 set -euo pipefail

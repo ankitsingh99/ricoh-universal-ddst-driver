@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary & Purpose
 
-The **Ricoh Universal DDST/GDI CUPS Driver Suite** is a native, high-performance raster filter, network print server, and Adobe-compliant PostScript Printer Description (PPD) driver system. It supports Ricoh DDST (Device Driver String Translation) and GDI monochrome laser and multifunction printers on **macOS** (Apple Silicon M1/M2/M3/M4 & Intel x86_64) and **Linux** (Debian, Ubuntu, Fedora, Arch, Raspberry Pi OS).
+The **Ricoh Universal DDST/GDI CUPS Driver Suite** is a native, high-performance raster filter, network print server, and Adobe-compliant PostScript Printer Description (PPD) driver system. It supports Ricoh DDST (Device Driver String Translation) and GDI monochrome laser and multifunction printers on **Linux** (Debian, Ubuntu, Fedora, openSUSE, Arch, Alpine, Void, Gentoo), **FreeBSD**, **OpenBSD**, **NetBSD**, **DragonFly BSD**, **macOS** (Apple Silicon M1/M2/M3/M4 & Intel x86_64), and **Solaris/illumos**.
 
 DDST printers are host-based ("GDI") laser printers that lack on-board PostScript (PS) or PCL interpreters. Instead of rendering page description languages in hardware, they require the host operating system to rasterize documents into 1-bit monochrome bitmaps, compress the pixels using ITU-T T.82 JBIG1 bi-level encoding, and encapsulate the payload within Hewlett-Packard Printer Job Language (HP-PJL) and Ricoh DDST framing sequences before transmission over USB or network sockets.
 

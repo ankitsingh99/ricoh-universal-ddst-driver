@@ -31,3 +31,9 @@ SHA256SUMS*
 *.gcno
 *.gcov
 test_outputs/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+.venv/

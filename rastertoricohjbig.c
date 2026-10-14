@@ -15,9 +15,31 @@
 #include <time.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdint.h>
+#include <sys/types.h>
 #include <jbig.h>
 #include <cups/cups.h>
 #include <cups/raster.h>
+
+#if defined(__GNUC__) || defined(__clang__)
+#define POPCOUNT_64(x) (unsigned)__builtin_popcountll(x)
+#define POPCOUNT_8(x)  (unsigned)__builtin_popcount(x)
+#else
+static inline unsigned popcount_64(uint64_t x) {
+    x = x - ((x >> 1) & 0x5555555555555555ULL);
+    x = (x & 0x3333333333333333ULL) + ((x >> 2) & 0x3333333333333333ULL);
+    x = (x + (x >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
+    return (unsigned)((x * 0x0101010101010101ULL) >> 56);
+}
+static inline unsigned popcount_8(unsigned char x) {
+    unsigned c = x;
+    c = c - ((c >> 1) & 0x55);
+    c = (c & 0x33) + ((c >> 2) & 0x33);
+    return (c + (c >> 4)) & 0x0F;
+}
+#define POPCOUNT_64(x) popcount_64(x)
+#define POPCOUNT_8(x)  popcount_8(x)
+#endif
 
 #ifndef STATIC
 #define STATIC static
@@ -97,24 +119,27 @@ STATIC void write_job_header(int copies)
         copies);
 }
 
-#include <stdint.h>
-
 /* Count black pixels across a 1-bit packed bitmap using 64-bit popcount */
 STATIC unsigned long count_dots(const unsigned char* bmp, unsigned w, unsigned h)
 {
     unsigned stride = (w + 7) / 8;
     size_t total_bytes = (size_t)stride * h;
-    size_t u64_count = total_bytes / sizeof(uint64_t);
-    const uint64_t* p64 = (const uint64_t*)(const void*)bmp;
     unsigned long n = 0;
 
-    for (size_t i = 0; i < u64_count; i++) {
-        n += (unsigned long)__builtin_popcountll(p64[i]);
-    }
-
-    const unsigned char* p8 = bmp + u64_count * sizeof(uint64_t);
-    for (size_t i = 0; i < total_bytes % sizeof(uint64_t); i++) {
-        n += (unsigned long)__builtin_popcount(p8[i]);
+    if (((uintptr_t)bmp & (sizeof(uint64_t) - 1)) == 0) {
+        size_t u64_count = total_bytes / sizeof(uint64_t);
+        const uint64_t* p64 = (const uint64_t*)(const void*)bmp;
+        for (size_t i = 0; i < u64_count; i++) {
+            n += (unsigned long)POPCOUNT_64(p64[i]);
+        }
+        const unsigned char* p8 = bmp + u64_count * sizeof(uint64_t);
+        for (size_t i = 0; i < total_bytes % sizeof(uint64_t); i++) {
+            n += (unsigned long)POPCOUNT_8(p8[i]);
+        }
+    } else {
+        for (size_t i = 0; i < total_bytes; i++) {
+            n += (unsigned long)POPCOUNT_8(bmp[i]);
+        }
     }
 
     return n;

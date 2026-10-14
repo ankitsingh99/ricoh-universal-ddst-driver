@@ -4,6 +4,7 @@
 Professional, enterprise-grade network print portal and CUPS administration.
 """
 
+import sys
 import os
 import io
 import time
@@ -94,11 +95,30 @@ def check_system_statuses():
             
         is_offline = any(r in ('offline-report', 'connecting-to-device', 'offline', 'media-empty-warning') for r in reasons)
         
+        usb_present = None
         try:
-            res = subprocess.run(["ioreg", "-p", "IOUSB", "-l"], capture_output=True, text=True, timeout=2)
-            usb_present = "ricoh" in res.stdout.lower() or "sp 200" in res.stdout.lower()
+            if sys.platform == "darwin":
+                res = subprocess.run(["ioreg", "-p", "IOUSB", "-l"], capture_output=True, text=True, timeout=2)
+                usb_present = "ricoh" in res.stdout.lower() or "sp 200" in res.stdout.lower()
+            elif sys.platform.startswith("freebsd"):
+                res = subprocess.run(["usbconfig"], capture_output=True, text=True, timeout=2)
+                usb_present = "ricoh" in res.stdout.lower() or "sp 200" in res.stdout.lower()
+            elif sys.platform.startswith("openbsd") or sys.platform.startswith("netbsd"):
+                res = subprocess.run(["usbdevs"], capture_output=True, text=True, timeout=2)
+                usb_present = "ricoh" in res.stdout.lower() or "sp 200" in res.stdout.lower()
+            else:
+                # Linux / Unix
+                res = subprocess.run(["lsusb"], capture_output=True, text=True, timeout=2)
+                usb_present = "ricoh" in res.stdout.lower() or "sp 200" in res.stdout.lower()
         except Exception:
-            usb_present = not is_offline
+            usb_present = None
+
+        if usb_present is None:
+            try:
+                res = subprocess.run(["lpinfo", "-v"], capture_output=True, text=True, timeout=2)
+                usb_present = "ricoh" in res.stdout.lower() or "sp 200" in res.stdout.lower()
+            except Exception:
+                usb_present = not is_offline
             
         if usb_present and not is_offline:
             printer_on = True

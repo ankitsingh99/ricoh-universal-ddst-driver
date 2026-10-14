@@ -53,6 +53,12 @@ int main(int argc, char* argv[])
     memset(all_ones, 0xFF, sizeof(all_ones));
     assert(count_dots(all_zeros, 32, 4) == 0);
     assert(count_dots(all_ones, 32, 4) == 128);
+    /* Test unaligned buffer pointer to exercise unaligned count_dots branch */
+    unsigned char unaligned[24];
+    memset(unaligned, 0x00, sizeof(unaligned));
+    unaligned[1] = 0xAA; /* 4 bits set */
+    unaligned[2] = 0x55; /* 4 bits set */
+    assert(count_dots(unaligned + 1, 16, 1) == 8);
 
     /* Test 3: write_job_header & fake null time */
     freopen("/dev/null", "w", stdout);

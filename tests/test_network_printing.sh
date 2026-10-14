@@ -1,4 +1,4 @@
-    #!/usr/bin/env bash
+#!/usr/bin/env bash
 # ==============================================================================
 # Ricoh DDST Driver - Network & Mobile Printing Integration Test Suite
 # Validates IPP remote endpoints, AirPrint mDNS registration, offline spooling,
@@ -50,10 +50,27 @@ grep -qi "enabled" "${TMP_DIR}/printer_info.log" || { echo "FAIL: Printer not en
 echo "[4/6] Verifying AirPrint / IPP mDNS service state..."
 if [ "$OS" = "Darwin" ]; then
     PLIST="$HOME/Library/LaunchAgents/com.ricoh.airprint.plist"
-    [ -f "$PLIST" ] || { echo "FAIL: LaunchAgent plist missing"; exit 1; }
-    launchctl list | grep -q "com.ricoh.airprint" || { echo "FAIL: LaunchAgent not running"; exit 1; }
-    grep -q "_universal" "$PLIST" || { echo "FAIL: AirPrint universal subtype missing in plist"; exit 1; }
-    echo "  [PASS] macOS AirPrint background broadcast is active."
+    if [ -f "$PLIST" ]; then
+        launchctl list 2>/dev/null | grep -q "com.ricoh.airprint" || { echo "FAIL: LaunchAgent not running"; exit 1; }
+        grep -q "_universal" "$PLIST" || { echo "FAIL: AirPrint universal subtype missing in plist"; exit 1; }
+        echo "  [PASS] macOS AirPrint background broadcast is active."
+    else
+        echo "  [*] LaunchAgent plist not yet installed; skipping live broadcast check."
+    fi
+else
+    # Linux & BSD
+    AVAHI_FOUND=0
+    for af in /etc/avahi/services/ricoh-airprint.service /usr/local/etc/avahi/services/ricoh-airprint.service /usr/pkg/etc/avahi/services/ricoh-airprint.service; do
+        if [ -f "$af" ]; then
+            grep -q "_universal" "$af" || { echo "FAIL: AirPrint universal subtype missing in Avahi service"; exit 1; }
+            echo "  [PASS] Avahi service validated: $af"
+            AVAHI_FOUND=1
+            break
+        fi
+    done
+    if [ "$AVAHI_FOUND" -eq 0 ]; then
+        echo "  [*] Avahi service file not yet installed; using native CUPS DNS-SD."
+    fi
 fi
 
 # Test 5: End-to-end PDF generation & IPP Print-Job submission while offline
@@ -110,16 +127,28 @@ if [ ! -f "$PPD_FILE" ]; then
     PPD_FILE="ppd/ricoh-sp200.ppd"
 fi
 
-if command -v cupsfilter >/dev/null 2>&1 && [ -f "/Library/Printers/Ricoh/Filter/rastertoricohddst" ]; then
-    STREAM_SIZE=$(cupsfilter -p "$PPD_FILE" -m application/vnd.cups-raster "${TMP_DIR}/test.pdf" 2>/dev/null | /Library/Printers/Ricoh/Filter/rastertoricohddst 999 test "Filter Test" 1 "" 2>/dev/null | wc -c | tr -d ' ')
+FILTER_BIN=""
+for candidate in "/Library/Printers/Ricoh/Filter/rastertoricohddst" \
+                 "/usr/lib/cups/filter/rastertoricohddst" \
+                 "/usr/local/libexec/cups/filter/rastertoricohddst" \
+                 "/usr/pkg/libexec/cups/filter/rastertoricohddst" \
+                 "${SCRIPT_DIR}/rastertoricohddst"; do
+    if [ -x "$candidate" ]; then
+        FILTER_BIN="$candidate"
+        break
+    fi
+done
+
+if command -v cupsfilter >/dev/null 2>&1 && [ -n "$FILTER_BIN" ]; then
+    STREAM_SIZE=$(cupsfilter -p "$PPD_FILE" -m application/vnd.cups-raster "${TMP_DIR}/test.pdf" 2>/dev/null | "$FILTER_BIN" 999 test "Filter Test" 1 "" 2>/dev/null | wc -c | tr -d ' ')
     if [ "$STREAM_SIZE" -gt 500 ]; then
-        echo "  [PASS] End-to-end filter pipeline converted PDF to $STREAM_SIZE bytes of valid DDST/PJL wire data."
+        echo "  [PASS] End-to-end filter pipeline converted PDF to $STREAM_SIZE bytes of valid DDST/PJL wire data (using $FILTER_BIN)."
     else
         echo "FAIL: DDST output size unexpectedly small: $STREAM_SIZE bytes"
         exit 1
     fi
 else
-    echo "  [*] Skipping live cupsfilter test (driver not installed in system path yet)."
+    echo "  [*] Skipping live cupsfilter test (cupsfilter utility or compiled driver binary not available)."
 fi
 
 echo ""

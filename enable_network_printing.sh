@@ -3,6 +3,7 @@
 # Ricoh Universal DDST Driver - Mobile & Network Printing Configuration
 # Enables AirPrint (iOS) and IPP (Android / Windows / Linux) network printing
 # with persistent mDNS advertisement and offline job spooling.
+# Supports: Linux, FreeBSD, OpenBSD, NetBSD, macOS (Darwin), Solaris/illumos
 # ==============================================================================
 
 set -euo pipefail
@@ -11,7 +12,42 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
 LAUNCHAGENT_DIR="$HOME/Library/LaunchAgents"
 LAUNCHAGENT_PLIST="$LAUNCHAGENT_DIR/com.ricoh.airprint.plist"
-AVAHI_SERVICE_FILE="/etc/avahi/services/ricoh-airprint.service"
+
+# Detect Avahi services directory across Linux and BSD
+AVAHI_DIR=""
+for candidate in /etc/avahi/services /usr/local/etc/avahi/services /usr/pkg/etc/avahi/services; do
+    if [ -d "$candidate" ]; then
+        AVAHI_DIR="$candidate"
+        break
+    fi
+done
+if [ -z "$AVAHI_DIR" ]; then
+    if [ "$OS" = "FreeBSD" ] || [ "$OS" = "DragonFly" ]; then
+        AVAHI_DIR="/usr/local/etc/avahi/services"
+    elif [ "$OS" = "NetBSD" ]; then
+        AVAHI_DIR="/usr/pkg/etc/avahi/services"
+    else
+        AVAHI_DIR="/etc/avahi/services"
+    fi
+fi
+AVAHI_SERVICE_FILE="$AVAHI_DIR/ricoh-airprint.service"
+
+ROOT_CMD=""
+if [ "$(id -u)" -ne 0 ]; then
+    if command -v sudo >/dev/null 2>&1; then
+        ROOT_CMD="sudo"
+    elif command -v doas >/dev/null 2>&1; then
+        ROOT_CMD="doas"
+    fi
+fi
+
+run_root() {
+    if [ -n "$ROOT_CMD" ]; then
+        $ROOT_CMD "$@"
+    else
+        "$@"
+    fi
+}
 
 show_help() {
     cat << EOF
@@ -63,21 +99,37 @@ get_friendly_name() {
 }
 
 get_local_ip() {
+    local ip=""
     if [ "$OS" = "Darwin" ]; then
-        ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}' | head -1 || echo "unknown"
-    else
-        hostname -I 2>/dev/null | awk '{print $1}' || echo "unknown"
+        ip=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)
     fi
+    if [ -z "$ip" ] && command -v hostname >/dev/null 2>&1; then
+        ip=$(hostname -I 2>/dev/null | awk '{print $1}' || true)
+    fi
+    if [ -z "$ip" ] && command -v ip >/dev/null 2>&1; then
+        ip=$(ip -4 addr show 2>/dev/null | awk '/inet / && !/127\.0\.0\.1/ {print $2}' | cut -d/ -f1 | head -1 || true)
+    fi
+    if [ -z "$ip" ] && command -v ifconfig >/dev/null 2>&1; then
+        ip=$(ifconfig 2>/dev/null | awk '/inet / && !/127\.0\.0\.1/ {print $2}' | head -1 || true)
+    fi
+    if [ -z "$ip" ]; then
+        ip="127.0.0.1"
+    fi
+    echo "$ip"
 }
 
 get_local_hostname() {
+    local name=""
     if [ "$OS" = "Darwin" ]; then
-        local name
-        name="$(scutil --get LocalHostName 2>/dev/null || hostname -s)"
-        echo "${name}.local"
-    else
-        echo "$(hostname -s).local"
+        name="$(scutil --get LocalHostName 2>/dev/null || true)"
     fi
+    if [ -z "$name" ]; then
+        name="$(hostname 2>/dev/null | cut -d. -f1 || true)"
+    fi
+    if [ -z "$name" ]; then
+        name="localhost"
+    fi
+    echo "${name}.local"
 }
 
 enable_sharing() {
@@ -91,9 +143,9 @@ enable_sharing() {
 
     echo "========================================================"
     echo " Enabling Mobile & Network Printing for Ricoh Driver"
-    echo " Detected OS: $OS"
+    echo " Detected OS:   $OS"
     echo " Printer Queue: $q"
-    echo " Host: $hostname (IP: $local_ip)"
+    echo " Host:          $hostname (IP: $local_ip)"
     echo "========================================================"
     echo ""
 
@@ -104,19 +156,6 @@ enable_sharing() {
         echo "  [OK] CUPS printer sharing and remote access enabled."
     else
         echo "  [WARN] cupsctl not found. Ensure cupsd is configured to listen on port 631."
-        # Attempt to enable TLS if cupsctl missing by configuring cupsd directly
-        sudo mkdir -p /etc/cups/ssl
-        if [ ! -f /etc/cups/ssl/server.crt ] || [ ! -f /etc/cups/ssl/server.key ]; then
-            echo "Generating self-signed certificate for CUPS..."
-            sudo openssl req -new -x509 -days 3650 -nodes -out /etc/cups/ssl/server.crt -keyout /etc/cups/ssl/server.key -subj "/CN=$(hostname)"
-            sudo chmod 600 /etc/cups/ssl/server.key
-            sudo chmod 644 /etc/cups/ssl/server.crt
-            sudo sed -i.bak '/^#*ServerCertificate/c\ServerCertificate /etc/cups/ssl/server.crt' /etc/cups/cupsd.conf
-            sudo sed -i.bak '/^#*ServerKey/c\ServerKey /etc/cups/ssl/server.key' /etc/cups/cupsd.conf
-        fi
-        sudo sed -i.bak '/^#*DefaultEncryption/c\DefaultEncryption Required' /etc/cups/cupsd.conf
-        echo "  [INFO] TLS configuration added to CUPS."
-
     fi
 
     # 2. Configure printer queue options
@@ -130,31 +169,6 @@ enable_sharing() {
 
     # 3. Setup persistent AirPrint / IPP mDNS broadcast
     echo "[3/4] Setting up persistent mDNS AirPrint / IPP advertisement..."
-    # Advertise TLS support via mDNS (Apple AirPrint uses txt record "TLS=1")
-    if [ "$OS" = "Darwin" ]; then
-        # On macOS, CUPS automatically adds required TXT records; ensure TLS flag
-        sudo defaults write /Library/Preferences/com.apple.CUPS.plist TLSEnabled -bool true || true
-    else
-        # For avahi (Linux), create a service file with TLS flag
-        sudo mkdir -p $(dirname "$AVAHI_SERVICE_FILE")
-        cat <<EOF > "$AVAHI_SERVICE_FILE"
-<?xml version="1.0"?>
-<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
-<service-group>
-  <name replace-wildcards="yes">%h Ricoh AirPrint</name>
-  <service>
-    <type>_ipp._tcp</type>
-    <port>631</port>
-    <txt-record>txtvers=1</txt-record>
-    <txt-record>qtotal=1</txt-record>
-    <txt-record>rp=${q}</txt-record>
-    <txt-record>ty=$(get_friendly_name "$q")</txt-record>
-    <txt-record>TLS=1</txt-record>
-  </service>
-</service-group>
-EOF
-        sudo avahi-daemon --reload || sudo systemctl restart avahi-daemon
-    fi
     if [ "$OS" = "Darwin" ]; then
         mkdir -p "$LAUNCHAGENT_DIR"
         cat << EOF > "$LAUNCHAGENT_PLIST"
@@ -180,6 +194,7 @@ EOF
         <string>pdl=application/pdf,image/jpeg</string>
         <string>URF=none</string>
         <string>air=none</string>
+        <string>TLS=1</string>
     </array>
     <key>KeepAlive</key>
     <true/>
@@ -192,21 +207,21 @@ EOF
 </dict>
 </plist>
 EOF
-        # Load the LaunchAgent
+        # Load LaunchAgent
         launchctl unload "$LAUNCHAGENT_PLIST" 2>/dev/null || true
         launchctl load "$LAUNCHAGENT_PLIST"
         sleep 1
         echo "  [OK] macOS LaunchAgent registered: $LAUNCHAGENT_PLIST"
         echo "  [OK] AirPrint mDNS service advertised as: '${friendly} (AirPrint)'"
 
-    elif [ -d "/etc/avahi/services" ]; then
-        if [ "$EUID" -ne 0 ]; then
-            echo "  [*] Writing Avahi service requires sudo on Linux..."
-            sudo bash -c "cat << 'EOF' > '$AVAHI_SERVICE_FILE'
-<?xml version=\"1.0\" standalone='no'?>
-<!DOCTYPE service-group SYSTEM \"avahi-service.dtd\">
+    elif command -v avahi-daemon >/dev/null 2>&1 || [ -d "$AVAHI_DIR" ]; then
+        run_root mkdir -p "$AVAHI_DIR"
+        TMP_AVAHI="$(mktemp -t ricoh_avahi_XXXXXX)"
+        cat << EOF > "$TMP_AVAHI"
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
 <service-group>
-  <name replace-wildcards=\"yes\">${friendly} (AirPrint)</name>
+  <name replace-wildcards="yes">${friendly} (AirPrint)</name>
   <service>
     <type>_ipp._tcp</type>
     <subtype>_universal._sub._ipp._tcp</subtype>
@@ -219,14 +234,29 @@ EOF
     <txt-record>pdl=application/pdf,image/jpeg</txt-record>
     <txt-record>URF=none</txt-record>
     <txt-record>air=none</txt-record>
+    <txt-record>TLS=1</txt-record>
   </service>
 </service-group>
-EOF"
-            sudo systemctl reload avahi-daemon 2>/dev/null || sudo service avahi-daemon reload 2>/dev/null || true
-            echo "  [OK] Linux Avahi service registered: $AVAHI_SERVICE_FILE"
+EOF
+        run_root install -m 644 "$TMP_AVAHI" "$AVAHI_SERVICE_FILE"
+        rm -f "$TMP_AVAHI"
+
+        # Reload Avahi across init systems
+        if command -v systemctl >/dev/null 2>&1; then
+            run_root systemctl reload avahi-daemon 2>/dev/null || run_root systemctl restart avahi-daemon 2>/dev/null || true
+        elif command -v rc-service >/dev/null 2>&1; then
+            run_root rc-service avahi-daemon reload 2>/dev/null || run_root rc-service avahi-daemon restart 2>/dev/null || true
+        elif command -v service >/dev/null 2>&1; then
+            run_root service avahi-daemon reload 2>/dev/null || run_root service avahi-daemon restart 2>/dev/null || true
+        elif command -v rcctl >/dev/null 2>&1; then
+            run_root rcctl reload avahi_daemon 2>/dev/null || run_root rcctl restart avahi_daemon 2>/dev/null || true
+        elif command -v avahi-daemon >/dev/null 2>&1; then
+            run_root avahi-daemon --reload 2>/dev/null || true
         fi
+        echo "  [OK] Avahi mDNS service registered: $AVAHI_SERVICE_FILE"
+        echo "  [OK] AirPrint mDNS service advertised as: '${friendly} (AirPrint)'"
     else
-        echo "  [*] Note: Avahi directory not found. Standard CUPS mDNS broadcasting will be used."
+        echo "  [*] Note: Avahi directory not found. CUPS internal DNS-SD broadcasting will be used."
     fi
 
     # 4. Final verification
@@ -247,7 +277,7 @@ EOF"
     echo "  2. On Android:"
     echo "     - Open Document -> Print -> Select '${q}' or '${friendly}'"
     echo "       (via Android Default Print Service or Mopria)."
-    echo "  3. On Other Computers (Mac/Windows/Linux):"
+    echo "  3. On Other Computers (Mac/Windows/Linux/BSD):"
     echo "     - Connect to network printer URI: ipp://${local_ip}:631/printers/${q}"
     echo ""
     echo "  Behavior:"
@@ -271,10 +301,15 @@ disable_sharing() {
         echo "  [OK] macOS AirPrint LaunchAgent removed."
     fi
 
-    if [ -f "$AVAHI_SERVICE_FILE" ]; then
-        sudo rm -f "$AVAHI_SERVICE_FILE" 2>/dev/null || rm -f "$AVAHI_SERVICE_FILE" 2>/dev/null || true
-        echo "  [OK] Linux Avahi service removed."
-    fi
+    for candidate_file in "/etc/avahi/services/ricoh-airprint.service" \
+                           "/usr/local/etc/avahi/services/ricoh-airprint.service" \
+                           "/usr/pkg/etc/avahi/services/ricoh-airprint.service" \
+                           "$AVAHI_SERVICE_FILE"; do
+        if [ -f "$candidate_file" ]; then
+            run_root rm -f "$candidate_file" 2>/dev/null || rm -f "$candidate_file" 2>/dev/null || true
+            echo "  [OK] Removed Avahi service: $candidate_file"
+        fi
+    done
 
     echo "Network sharing disabled for '$q'."
 }
@@ -306,7 +341,7 @@ show_status() {
     if [ "$OS" = "Darwin" ]; then
         if [ -f "$LAUNCHAGENT_PLIST" ]; then
             echo "LaunchAgent file: Present ($LAUNCHAGENT_PLIST)"
-            if launchctl list | grep -q "com.ricoh.airprint"; then
+            if launchctl list 2>/dev/null | grep -q "com.ricoh.airprint"; then
                 echo "LaunchAgent state: RUNNING (active background mDNS broadcast)"
             else
                 echo "LaunchAgent state: NOT LOADED"
@@ -314,10 +349,21 @@ show_status() {
         else
             echo "LaunchAgent file: Not installed"
         fi
-    elif [ -f "$AVAHI_SERVICE_FILE" ]; then
-        echo "Avahi service file: Present ($AVAHI_SERVICE_FILE)"
     else
-        echo "No custom mDNS service file found."
+        FOUND_AVAHI=0
+        for candidate_file in "$AVAHI_SERVICE_FILE" \
+                               /etc/avahi/services/ricoh-airprint.service \
+                               /usr/local/etc/avahi/services/ricoh-airprint.service \
+                               /usr/pkg/etc/avahi/services/ricoh-airprint.service; do
+            if [ -f "$candidate_file" ]; then
+                echo "Avahi service file: Present ($candidate_file)"
+                FOUND_AVAHI=1
+                break
+            fi
+        done
+        if [ "$FOUND_AVAHI" -eq 0 ]; then
+            echo "No custom Avahi service file found (native CUPS mDNS broadcasting active)."
+        fi
     fi
     echo "========================================================"
 }

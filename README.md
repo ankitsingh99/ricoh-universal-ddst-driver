@@ -1,15 +1,15 @@
-# Ricoh Universal DDST/GDI CUPS Driver Suite (macOS and Linux)
+# Ricoh Universal DDST/GDI CUPS Driver Suite (Linux, BSD, macOS & Unix)
 
 [![CI](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/actions/workflows/ci.yml/badge.svg)](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/ankitsingh99/ricoh-universal-ddst-driver?color=blue)](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/releases)
 [![Discussions](https://img.shields.io/badge/Discussions-Community%20Q%26A-orange.svg)](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/discussions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-blue.svg)](#supported-operating-systems)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20FreeBSD%20%7C%20OpenBSD%20%7C%20NetBSD%20%7C%20macOS%20%7C%20Solaris-blue.svg)](#supported-operating-systems)
 [![CUPS Version](https://img.shields.io/badge/CUPS-2.0%2B-blue.svg)](#prerequisites--dependencies)
 
-A native, high-performance CUPS raster filter and Adobe-compliant PPD driver suite for **Ricoh DDST/GDI monochrome laser and multifunction printers** on **macOS** (Apple Silicon M1/M2/M3/M4 & Intel x86_64) and **Linux**.
+A native, high-performance CUPS raster filter and Adobe-compliant PPD driver suite for **Ricoh DDST/GDI monochrome laser and multifunction printers** on **Linux**, **FreeBSD**, **OpenBSD**, **NetBSD**, **macOS** (Apple Silicon M1/M2/M3/M4 & Intel x86_64), and **Solaris/illumos**.
 
-Consumer and SMB Ricoh DDST/GDI printers lack official Linux and macOS drivers and are absent from standard printer stacks (`foo2zjs`, OpenPrinting, Gutenprint, HPLIP). This project provides a direct native C implementation of the PJL + ITU-T T.82 JBIG1 wire protocol reverse-engineered from USB traffic.
+Consumer and SMB Ricoh DDST/GDI printers lack official Linux and BSD/macOS drivers and are absent from standard printer stacks (`foo2zjs`, OpenPrinting, Gutenprint, HPLIP). This project provides a direct native C implementation of the PJL + ITU-T T.82 JBIG1 wire protocol reverse-engineered from USB traffic.
 
 ---
 
@@ -42,8 +42,10 @@ Consumer and SMB Ricoh DDST/GDI printers lack official Linux and macOS drivers a
 
 ## Supported Operating Systems
 
-- **macOS**: macOS Sonoma, Ventura, Monterey, Big Sur (Apple Silicon M1/M2/M3/M4 & Intel x86_64)
-- **Linux**: Debian, Ubuntu, Linux Mint, Raspberry Pi OS (ARM32/ARM64), Fedora, RHEL, AlmaLinux, Arch Linux, Manjaro
+- **Linux**: Debian, Ubuntu, Linux Mint, Pop!_OS, Raspberry Pi OS (ARM32/ARM64), Fedora, RHEL, CentOS, AlmaLinux, Rocky Linux, openSUSE / SLES, Arch Linux, Manjaro, Alpine Linux (musl libc), Void Linux, Gentoo
+- **BSD**: FreeBSD, OpenBSD, NetBSD, DragonFly BSD
+- **macOS**: macOS Sequoia, Sonoma, Ventura, Monterey, Big Sur (Apple Silicon M1/M2/M3/M4 & Intel x86_64)
+- **Unix**: Solaris / illumos (OpenIndiana, OmniOS, SmartOS), AIX, and standard POSIX CUPS environments
 
 ---
 
@@ -116,15 +118,15 @@ sudo make install
 
 #### Step 3: Select the PPD Profile for Your Model
 
-| Printer Model | macOS Installed PPD Path | Linux Installed PPD Path |
-|---|---|---|
-| **SP 100 / SP 100SU / SP 100SF** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp100.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp100.ppd` |
-| **SP 110 / SP 111 / SP 112** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp111.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp111.ppd` |
-| **SP 150 / SP 150w / SP 150SU** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp150.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp150.ppd` |
-| **SP 200 / SP 201 / SP 204** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp200.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp200.ppd` |
-| **SP 210 / SP 212 / SP 213 / SP 220** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp210.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp210.ppd` |
-| **SP 230DNw / SP 230SFNw** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp230.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp230.ppd` |
-| **SP 310 / SP 311 / SP 325 / SP 3710** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp310.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp310.ppd` |
+| Printer Model | macOS Installed PPD Path | Linux Installed PPD Path | FreeBSD / OpenBSD / NetBSD Path |
+|---|---|---|---|
+| **SP 100 / SP 100SU / SP 100SF** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp100.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp100.ppd` | `/usr/local/share/cups/model/ricoh-sp100.ppd` |
+| **SP 110 / SP 111 / SP 112** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp111.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp111.ppd` | `/usr/local/share/cups/model/ricoh-sp111.ppd` |
+| **SP 150 / SP 150w / SP 150SU** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp150.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp150.ppd` | `/usr/local/share/cups/model/ricoh-sp150.ppd` |
+| **SP 200 / SP 201 / SP 204** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp200.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp200.ppd` | `/usr/local/share/cups/model/ricoh-sp200.ppd` |
+| **SP 210 / SP 212 / SP 213 / SP 220** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp210.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp210.ppd` | `/usr/local/share/cups/model/ricoh-sp210.ppd` |
+| **SP 230DNw / SP 230SFNw** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp230.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp230.ppd` | `/usr/local/share/cups/model/ricoh-sp230.ppd` |
+| **SP 310 / SP 311 / SP 325 / SP 3710** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp310.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp310.ppd` | `/usr/local/share/cups/model/ricoh-sp310.ppd` |
 
 #### Step 4: Register & Enable the Print Queue
 ```bash

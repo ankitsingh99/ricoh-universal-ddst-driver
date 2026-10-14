@@ -58,6 +58,10 @@ jobs:
         run: |
           make test-coverage
 
+      - name: Run Multi-OS Compatibility Test Suite
+        run: |
+          make test-os
+
       - name: Build Universal Driver Binaries
         run: |
           make clean
