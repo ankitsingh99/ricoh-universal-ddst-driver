@@ -8,6 +8,7 @@ CC            ?= gcc
 CFLAGS        ?= -O2 -Wall -Wextra
 FILTER         = rastertoricohddst
 LEGACY_FILTER  = rastertoricohjbig
+LHPL_FILTER    = rastertoricohlhpl
 SRC            = rastertoricohddst.c
 PPD_DIR_SRC    = ppd
 PRINTER       ?= Ricoh_SP_200_DDST
@@ -19,7 +20,7 @@ CPPFLAGS      += -I/usr/local/include -I/usr/pkg/include -I/opt/homebrew/include
 LDFLAGS       += -L/usr/local/lib -L/usr/pkg/lib -L/opt/homebrew/lib
 LIBS          ?= -lcups -lcupsimage -ljbig
 
-.PHONY: all build install uninstall register test test-coverage test-network test-os enable-sharing disable-sharing status-sharing clean help package package-deb package-pkg package-tar dist
+.PHONY: all build install uninstall register detect test test-coverage test-network test-os enable-sharing disable-sharing status-sharing clean help package package-deb package-pkg package-tar dist
 
 all: build
 
@@ -29,6 +30,7 @@ help:
 	@echo "make build           - Compile the CUPS raster filter binaries"
 	@echo "sudo make install    - Install filters and PPDs to system CUPS directories"
 	@echo "sudo make register   - Register and enable default printer queue with CUPS"
+	@echo "make detect          - Auto-detect connected Ricoh USB/Network printer models"
 	@echo "make enable-sharing  - Enable AirPrint & IPP network printing for mobile devices"
 	@echo "make status-sharing  - Check network sharing, queue, and mDNS status"
 	@echo "make disable-sharing - Disable network sharing and stop mDNS advertisement"
@@ -43,13 +45,16 @@ help:
 	@echo "make package-tar     - Build portable release tarballs (.tar.gz)"
 	@echo "make clean           - Remove compiled binaries and dist files"
 
-build: $(FILTER) $(LEGACY_FILTER)
+build: $(FILTER) $(LEGACY_FILTER) $(LHPL_FILTER)
 
 $(FILTER): $(SRC)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $$(cups-config --cflags 2>/dev/null) $(LDFLAGS) -o $@ $< $(LIBS) $$(cups-config --libs 2>/dev/null)
 
 $(LEGACY_FILTER): rastertoricohjbig.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $$(cups-config --cflags 2>/dev/null) $(LDFLAGS) -o $@ $< $(LIBS) $$(cups-config --libs 2>/dev/null)
+
+$(LHPL_FILTER): rastertoricohlhpl.c jbig/jbig85.c jbig/jbig_ar.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -Ijbig $$(cups-config --cflags 2>/dev/null) $(LDFLAGS) -o $@ rastertoricohlhpl.c jbig/jbig85.c jbig/jbig_ar.c $(LIBS) $$(cups-config --libs 2>/dev/null)
 
 install: build
 	@OS="$$(uname -s)"; \
@@ -88,16 +93,17 @@ install: build
 	mkdir -p "$(DESTDIR)$$FDIR" "$(DESTDIR)$$PDIR"; \
 	install -m 755 $(FILTER) "$(DESTDIR)$$FDIR/$(FILTER)"; \
 	install -m 755 $(LEGACY_FILTER) "$(DESTDIR)$$FDIR/$(LEGACY_FILTER)"; \
+	install -m 755 $(LHPL_FILTER) "$(DESTDIR)$$FDIR/$(LHPL_FILTER)"; \
 	if [ "$$OS" = "Darwin" ]; then \
 		for ppd in $(PPD_DIR_SRC)/*.ppd ricoh-sp200.ppd; do \
 			if [ -f "$$ppd" ]; then \
 				target="$(DESTDIR)$$PDIR/$$(basename "$$ppd")"; \
-				sed "s|application/vnd.cups-raster 0 rastertoricohddst|application/vnd.cups-raster 0 $$FDIR/rastertoricohddst|g; s|application/vnd.cups-raster 0 rastertoricohjbig|application/vnd.cups-raster 0 $$FDIR/rastertoricohjbig|g" "$$ppd" > "$$target"; \
+				sed "s|application/vnd.cups-raster 0 rastertoricohddst|application/vnd.cups-raster 0 $$FDIR/rastertoricohddst|g; s|application/vnd.cups-raster 0 rastertoricohjbig|application/vnd.cups-raster 0 $$FDIR/rastertoricohjbig|g; s|application/vnd.cups-raster 0 rastertoricohlhpl|application/vnd.cups-raster 0 $$FDIR/rastertoricohlhpl|g" "$$ppd" > "$$target"; \
 				chmod 644 "$$target"; \
 			fi; \
 		done; \
 		chown -R root:wheel /Library/Printers/Ricoh "$(DESTDIR)$$PDIR"/ricoh-sp*.ppd 2>/dev/null || true; \
-		xattr -d com.apple.quarantine "$(DESTDIR)$$FDIR/$(FILTER)" "$(DESTDIR)$$FDIR/$(LEGACY_FILTER)" 2>/dev/null || true; \
+		xattr -d com.apple.quarantine "$(DESTDIR)$$FDIR/$(FILTER)" "$(DESTDIR)$$FDIR/$(LEGACY_FILTER)" "$(DESTDIR)$$FDIR/$(LHPL_FILTER)" 2>/dev/null || true; \
 	else \
 		for ppd in $(PPD_DIR_SRC)/*.ppd ricoh-sp200.ppd; do \
 			if [ -f "$$ppd" ]; then \
@@ -184,15 +190,19 @@ status-sharing:
 	@chmod +x enable_network_printing.sh
 	./enable_network_printing.sh --status --printer $(PRINTER)
 
+detect:
+	@chmod +x detect_printer.sh
+	./detect_printer.sh
+
 uninstall:
 	lpadmin -x $(PRINTER) 2>/dev/null || true
 	@FDIR="$(FILTER_DIR)"; \
 	PDIR="$(PPD_DIR)"; \
-	for f in "$$FDIR/$(FILTER)" "$$FDIR/$(LEGACY_FILTER)" \
-	         /Library/Printers/Ricoh/Filter/$(FILTER) /Library/Printers/Ricoh/Filter/$(LEGACY_FILTER) \
-	         /usr/lib/cups/filter/$(FILTER) /usr/lib/cups/filter/$(LEGACY_FILTER) \
-	         /usr/local/libexec/cups/filter/$(FILTER) /usr/local/libexec/cups/filter/$(LEGACY_FILTER) \
-	         /usr/pkg/libexec/cups/filter/$(FILTER) /usr/pkg/libexec/cups/filter/$(LEGACY_FILTER); do \
+	for f in "$$FDIR/$(FILTER)" "$$FDIR/$(LEGACY_FILTER)" "$$FDIR/$(LHPL_FILTER)" \
+	         /Library/Printers/Ricoh/Filter/$(FILTER) /Library/Printers/Ricoh/Filter/$(LEGACY_FILTER) /Library/Printers/Ricoh/Filter/$(LHPL_FILTER) \
+	         /usr/lib/cups/filter/$(FILTER) /usr/lib/cups/filter/$(LEGACY_FILTER) /usr/lib/cups/filter/$(LHPL_FILTER) \
+	         /usr/local/libexec/cups/filter/$(FILTER) /usr/local/libexec/cups/filter/$(LEGACY_FILTER) /usr/local/libexec/cups/filter/$(LHPL_FILTER) \
+	         /usr/pkg/libexec/cups/filter/$(FILTER) /usr/pkg/libexec/cups/filter/$(LEGACY_FILTER) /usr/pkg/libexec/cups/filter/$(LHPL_FILTER); do \
 		[ -n "$$f" ] && rm -f "$(DESTDIR)$$f" 2>/dev/null || true; \
 	done; \
 	for p in "$$PDIR" /Library/Printers/PPDs/Contents/Resources /usr/share/ppd/cupsfilters \
@@ -232,5 +242,5 @@ docker-build:
 	docker build -t ghcr.io/ankitsingh99/ricoh-universal-ddst-driver:$(VERSION) -t ghcr.io/ankitsingh99/ricoh-universal-ddst-driver:latest .
 
 clean:
-	rm -f $(FILTER) $(LEGACY_FILTER) *.gcda *.gcno *.gcov *.o
+	rm -f $(FILTER) $(LEGACY_FILTER) $(LHPL_FILTER) *.gcda *.gcno *.gcov *.o
 	rm -rf $(DIST_DIR) build

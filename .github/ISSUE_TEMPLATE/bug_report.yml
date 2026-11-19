@@ -37,7 +37,7 @@ body:
     id: printer_model
     attributes:
       label: Printer Model
-      description: e.g. Ricoh SP 100, SP 111, SP 200, SP 210, SP 230, SP 310, etc.
+      description: e.g. Ricoh SP 100, SP 111, SP 150, SP 200, SP 210, SP 230, SP 310, etc.
       placeholder: e.g., Ricoh SP 210 DDST
     validations:
       required: true

@@ -38,12 +38,13 @@ make build
 # 2. Copy binaries
 install -m 755 "${SCRIPT_DIR}/rastertoricohddst" "${PAYLOAD_ROOT}/Library/Printers/Ricoh/Filter/rastertoricohddst"
 install -m 755 "${SCRIPT_DIR}/rastertoricohjbig" "${PAYLOAD_ROOT}/Library/Printers/Ricoh/Filter/rastertoricohjbig"
+install -m 755 "${SCRIPT_DIR}/rastertoricohlhpl" "${PAYLOAD_ROOT}/Library/Printers/Ricoh/Filter/rastertoricohlhpl"
 
 # 3. Process and install PPDs with absolute macOS filter paths
 for ppd in "${SCRIPT_DIR}"/ppd/*.ppd "${SCRIPT_DIR}"/ricoh-sp200.ppd; do
     if [ -f "${ppd}" ]; then
         filename="$(basename "${ppd}")"
-        sed 's|application/vnd.cups-raster 0 rastertoricohddst|application/vnd.cups-raster 0 /Library/Printers/Ricoh/Filter/rastertoricohddst|g; s|application/vnd.cups-raster 0 rastertoricohjbig|application/vnd.cups-raster 0 /Library/Printers/Ricoh/Filter/rastertoricohjbig|g' "${ppd}" > "${PAYLOAD_ROOT}/Library/Printers/PPDs/Contents/Resources/${filename}"
+        sed 's|application/vnd.cups-raster 0 rastertoricohddst|application/vnd.cups-raster 0 /Library/Printers/Ricoh/Filter/rastertoricohddst|g; s|application/vnd.cups-raster 0 rastertoricohjbig|application/vnd.cups-raster 0 /Library/Printers/Ricoh/Filter/rastertoricohjbig|g; s|application/vnd.cups-raster 0 rastertoricohlhpl|application/vnd.cups-raster 0 /Library/Printers/Ricoh/Filter/rastertoricohlhpl|g' "${ppd}" > "${PAYLOAD_ROOT}/Library/Printers/PPDs/Contents/Resources/${filename}"
         chmod 644 "${PAYLOAD_ROOT}/Library/Printers/PPDs/Contents/Resources/${filename}"
     fi
 done

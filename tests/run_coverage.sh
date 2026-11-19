@@ -71,12 +71,20 @@ $COMPILER --coverage rastertoricohddst.o "${TMP_DIR}/test_mocks.o" -Ddriver_main
 $COMPILER -O0 -g --coverage -DSTATIC="" -DTESTING -Dmain=driver_main_jbig ${CPPFLAGS} -c rastertoricohjbig.c -o rastertoricohjbig.o
 $COMPILER --coverage rastertoricohjbig.o "${TMP_DIR}/test_mocks.o" -Ddriver_main=driver_main_jbig "${TEST_DIR}/main_driver.c" ${LDFLAGS} -o "${TMP_DIR}/rastertoricohjbig" ${LIBS}
 
+$COMPILER -O0 -g --coverage -DSTATIC="" -DTESTING -Dmain=driver_main_lhpl -Ijbig ${CPPFLAGS} -c rastertoricohlhpl.c -o rastertoricohlhpl.o
+$COMPILER -O0 -g ${CPPFLAGS} -c jbig/jbig85.c -Ijbig -o "${TMP_DIR}/jbig85.o"
+$COMPILER -O0 -g ${CPPFLAGS} -c jbig/jbig_ar.c -Ijbig -o "${TMP_DIR}/jbig_ar.o"
+$COMPILER --coverage rastertoricohlhpl.o "${TMP_DIR}/jbig85.o" "${TMP_DIR}/jbig_ar.o" "${TMP_DIR}/test_mocks.o" -Ddriver_main=driver_main_lhpl "${TEST_DIR}/main_driver.c" ${LDFLAGS} -o "${TMP_DIR}/rastertoricohlhpl" ${LIBS}
+
 # Build unit test runners linking against the instrumented object files
 $COMPILER ${CPPFLAGS} -c "${TEST_DIR}/test_unit_ddst.c" -o "${TMP_DIR}/test_unit_ddst.o"
 $COMPILER --coverage "${TMP_DIR}/test_unit_ddst.o" rastertoricohddst.o "${TMP_DIR}/test_mocks.o" ${LDFLAGS} -o "${TMP_DIR}/test_unit_ddst" ${LIBS}
 
 $COMPILER ${CPPFLAGS} -c "${TEST_DIR}/test_unit_jbig.c" -o "${TMP_DIR}/test_unit_jbig.o"
 $COMPILER --coverage "${TMP_DIR}/test_unit_jbig.o" rastertoricohjbig.o "${TMP_DIR}/test_mocks.o" ${LDFLAGS} -o "${TMP_DIR}/test_unit_jbig" ${LIBS}
+
+$COMPILER -Ijbig ${CPPFLAGS} -c "${TEST_DIR}/test_unit_lhpl.c" -o "${TMP_DIR}/test_unit_lhpl.o"
+$COMPILER --coverage "${TMP_DIR}/test_unit_lhpl.o" rastertoricohlhpl.o "${TMP_DIR}/jbig85.o" "${TMP_DIR}/jbig_ar.o" "${TMP_DIR}/test_mocks.o" ${LDFLAGS} -o "${TMP_DIR}/test_unit_lhpl" ${LIBS}
 
 # 5. Execute integration & unit test cases
 echo "[4/5] Executing test suite against rastertoricohddst..."
@@ -117,34 +125,56 @@ set -e
 
 "${TMP_DIR}/test_unit_jbig" "${TMP_DIR}/mono.ras" "${TMP_DIR}/gray.ras"
 
+echo "Executing test suite against rastertoricohlhpl..."
+"${TMP_DIR}/rastertoricohlhpl" < "${TMP_DIR}/mono.ras" > /dev/null
+"${TMP_DIR}/rastertoricohlhpl" 300 user "Large Test" 1 "" "${TMP_DIR}/large.ras" > /dev/null
+"${TMP_DIR}/rastertoricohlhpl" 301 user "Multi-page Test" 2 "" "${TMP_DIR}/multipage.ras" > /dev/null
+"${TMP_DIR}/rastertoricohlhpl" 302 user "Legal Test" 1 "" "${TMP_DIR}/legal.ras" > /dev/null
+"${TMP_DIR}/rastertoricohlhpl" 303 user "Letter Test" 3 "" "${TMP_DIR}/duplex.ras" > /dev/null
+"${TMP_DIR}/rastertoricohlhpl" 304 user "Gray Test" 1 "" "${TMP_DIR}/gray.ras" > /dev/null
+"${TMP_DIR}/rastertoricohlhpl" 305 user "Gray3 Test" 1 "" "${TMP_DIR}/gray3.ras" > /dev/null
+"${TMP_DIR}/rastertoricohlhpl" 306 user "RGB Test" 1 "" "${TMP_DIR}/rgb.ras" > /dev/null
+"${TMP_DIR}/rastertoricohlhpl" 307 user "Empty Test" 1 "" "${TMP_DIR}/empty.ras" > /dev/null
+
+set +e
+"${TMP_DIR}/rastertoricohlhpl" 308 user "Missing" 1 "" "${TMP_DIR}/nonexistent.ras" > /dev/null 2>&1
+"${TMP_DIR}/rastertoricohlhpl" 309 user "Corrupt" 1 "" "${TMP_DIR}/corrupt.ras" > /dev/null 2>&1
+set -e
+
+"${TMP_DIR}/test_unit_lhpl" "${TMP_DIR}/mono.ras" "${TMP_DIR}/gray.ras"
+
 # 6. Generate gcov report
 echo ""
 echo "========================================================"
 echo " [5/5] Generating Code Coverage Report (gcov)"
 echo "========================================================"
 
-gcov rastertoricohddst.gcno rastertoricohjbig.gcno > "${TMP_DIR}/gcov.log"
+gcov rastertoricohddst.gcno rastertoricohjbig.gcno rastertoricohlhpl.gcno > "${TMP_DIR}/gcov.log"
 cat "${TMP_DIR}/gcov.log"
 
 # Parse coverage percentages
 DDST_COV=$(grep -A 1 "File 'rastertoricohddst.c'" "${TMP_DIR}/gcov.log" | grep "Lines executed:" | sed -E 's/.*Lines executed:([0-9.]+)%.*/\1/')
 JBIG_COV=$(grep -A 1 "File 'rastertoricohjbig.c'" "${TMP_DIR}/gcov.log" | grep "Lines executed:" | sed -E 's/.*Lines executed:([0-9.]+)%.*/\1/')
+LHPL_COV=$(grep -A 1 "File 'rastertoricohlhpl.c'" "${TMP_DIR}/gcov.log" | grep "Lines executed:" | sed -E 's/.*Lines executed:([0-9.]+)%.*/\1/')
 
 echo ""
 echo "--------------------------------------------------------"
 echo " Coverage Summary:"
 echo "   rastertoricohddst.c Line Coverage: ${DDST_COV}%"
 echo "   rastertoricohjbig.c Line Coverage: ${JBIG_COV}%"
+echo "   rastertoricohlhpl.c Line Coverage: ${LHPL_COV}%"
 echo "--------------------------------------------------------"
 
 # 7. Assert coverage >= 95%
 python3 -c "
 ddst = float('${DDST_COV}')
 jbig = float('${JBIG_COV}')
-avg = (ddst + jbig) / 2.0
+lhpl = float('${LHPL_COV}')
+avg = (ddst + jbig + lhpl) / 3.0
 print(f'Overall average coverage: {avg:.2f}%')
 assert ddst >= 95.0, f'rastertoricohddst coverage {ddst}% is below 95%'
 assert jbig >= 95.0, f'rastertoricohjbig coverage {jbig}% is below 95%'
+assert lhpl >= 95.0, f'rastertoricohlhpl coverage {lhpl}% is below 95%'
 print('\n*** SUCCESS: 95%+ Code Coverage Achieved! ***\n')
 "
 

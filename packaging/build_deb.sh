@@ -53,13 +53,14 @@ mkdir -p "${DEB_OUTPUT_DIR}"
 
 # 1. Build binaries if needed
 cd "${SCRIPT_DIR}"
-if [ ! -f "rastertoricohddst" ] || [ ! -f "rastertoricohjbig" ]; then
+if [ ! -f "rastertoricohddst" ] || [ ! -f "rastertoricohjbig" ] || [ ! -f "rastertoricohlhpl" ]; then
     make build
 fi
 
 # 2. Copy binaries
 install -m 755 "${SCRIPT_DIR}/rastertoricohddst" "${BUILD_ROOT}/usr/lib/cups/filter/rastertoricohddst"
 install -m 755 "${SCRIPT_DIR}/rastertoricohjbig" "${BUILD_ROOT}/usr/lib/cups/filter/rastertoricohjbig"
+install -m 755 "${SCRIPT_DIR}/rastertoricohlhpl" "${BUILD_ROOT}/usr/lib/cups/filter/rastertoricohlhpl"
 
 # 3. Copy PPD files
 install -m 644 "${SCRIPT_DIR}"/ppd/*.ppd "${BUILD_ROOT}/usr/share/ppd/cupsfilters/"
@@ -83,7 +84,7 @@ Suggests: system-config-printer
 Homepage: https://github.com/ankitsingh99/ricoh-universal-ddst-driver
 Description: Universal CUPS DDST/GDI printer driver for Ricoh Aficio SP Series
  High-performance CUPS raster filter and PPD driver suite supporting Ricoh
- SP 100, SP 110, SP 200, SP 210, SP 230, and SP 310 series laser printers.
+ SP 100, SP 110, SP 150, SP 200, SP 210, SP 230, and SP 310 series laser printers.
  Provides native raster conversion and JBIG stream compression.
 EOF
 

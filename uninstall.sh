@@ -42,6 +42,7 @@ run_root() {
 echo "[1/3] Removing CUPS printer queue(s)..."
 for q in "$TARGET_PRINTER" \
          Ricoh_SP_100_DDST Ricoh_SP_111_DDST \
+         Ricoh_SP_150_LHPL Ricoh_SP_150_DDST \
          Ricoh_SP_200_DDST Ricoh_SP_210_DDST Ricoh_SP_230_DDST \
          Ricoh_SP_310_DDST; do
     if lpstat -p "$q" >/dev/null 2>&1; then
@@ -55,18 +56,22 @@ echo "[2/3] Removing filter binaries..."
 FILTER_PATHS=(
     "/Library/Printers/Ricoh/Filter/rastertoricohddst"
     "/Library/Printers/Ricoh/Filter/rastertoricohjbig"
+    "/Library/Printers/Ricoh/Filter/rastertoricohlhpl"
     "/usr/lib/cups/filter/rastertoricohddst"
     "/usr/lib/cups/filter/rastertoricohjbig"
+    "/usr/lib/cups/filter/rastertoricohlhpl"
     "/usr/local/libexec/cups/filter/rastertoricohddst"
     "/usr/local/libexec/cups/filter/rastertoricohjbig"
+    "/usr/local/libexec/cups/filter/rastertoricohlhpl"
     "/usr/pkg/libexec/cups/filter/rastertoricohddst"
     "/usr/pkg/libexec/cups/filter/rastertoricohjbig"
+    "/usr/pkg/libexec/cups/filter/rastertoricohlhpl"
 )
 
 if command -v cups-config >/dev/null 2>&1; then
     SERVER_BIN="$(cups-config --serverbin 2>/dev/null || true)"
     if [ -n "$SERVER_BIN" ]; then
-        FILTER_PATHS+=("$SERVER_BIN/filter/rastertoricohddst" "$SERVER_BIN/filter/rastertoricohjbig")
+        FILTER_PATHS+=("$SERVER_BIN/filter/rastertoricohddst" "$SERVER_BIN/filter/rastertoricohjbig" "$SERVER_BIN/filter/rastertoricohlhpl")
     fi
 fi
 

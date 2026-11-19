@@ -16,7 +16,7 @@ This project is built upon the collaborative work and reverse-engineering effort
 
 - **Ankit Kumar Singh ([@ankitsingh99](https://github.com/ankitsingh99))**
   - Expanded the driver into the Universal Ricoh DDST/GDI Suite (`rastertoricohddst`).
-  - Added multi-model PPD library (SP 100, 110, 200, 210, 230, 310 series), hardware duplexing, and multi-tray support.
+  - Added multi-model PPD library (SP 100, 110, 150, 200, 210, 230, 310 series), native LHPL filter (`rastertoricohlhpl`), auto printer detection, hardware duplexing, and multi-tray support.
   - Built automated multi-platform installers, macOS sandbox root permissions setup, and cross-platform CI pipelines.
 
 ---

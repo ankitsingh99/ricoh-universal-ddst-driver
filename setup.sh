@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Ricoh Universal DDST/GDI CUPS Driver Suite - Universal Automated Installer
-# Supports: Ricoh SP 100, SP 110, SP 111, SP 112, SP 200, SP 210, SP 230, SP 310 Series
+# Supports: Ricoh SP 100, SP 110, SP 111, SP 112, SP 150, SP 200, SP 210, SP 230, SP 310 Series
 # Platforms: Linux (Debian, Ubuntu, Fedora, RHEL, openSUSE, Arch, Alpine, Void, Gentoo),
 #            FreeBSD, OpenBSD, NetBSD, DragonFly BSD, macOS (Intel & Apple Silicon),
 #            Solaris / illumos (OpenIndiana, OmniOS), and POSIX/Unix environments.
 # ==============================================================================
 
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [ "${1:-}" = "--detect" ]; then
+    "$SCRIPT_DIR/detect_printer.sh"
+    exit 0
+fi
 
 DEFAULT_PRINTER_NAME="Ricoh_SP_200_DDST"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -242,9 +249,12 @@ cd "$SCRIPT_DIR"
 $COMPILER $CFLAGS $CPPFLAGS $LDFLAGS -o rastertoricohddst rastertoricohddst.c $LIBS
 # shellcheck disable=SC2086
 $COMPILER $CFLAGS $CPPFLAGS $LDFLAGS -o rastertoricohjbig rastertoricohjbig.c $LIBS
+# shellcheck disable=SC2086
+$COMPILER $CFLAGS $CPPFLAGS -Ijbig $LDFLAGS -o rastertoricohlhpl rastertoricohlhpl.c jbig/jbig85.c jbig/jbig_ar.c $LIBS
 
 echo "  [OK] Compiled rastertoricohddst"
 echo "  [OK] Compiled rastertoricohjbig"
+echo "  [OK] Compiled rastertoricohlhpl"
 
 # ------------------------------------------------------------------------------
 # 4. Install Filter Binaries and PPD Library
@@ -256,18 +266,19 @@ require_elevated
 run_root mkdir -p "$FILTER_DIR" "$PPD_DIR"
 run_root install -m 755 rastertoricohddst "$FILTER_DIR/rastertoricohddst"
 run_root install -m 755 rastertoricohjbig "$FILTER_DIR/rastertoricohjbig"
+run_root install -m 755 rastertoricohlhpl "$FILTER_DIR/rastertoricohlhpl"
 
 if [ "$OS" = "Darwin" ]; then
     for ppd in "$SCRIPT_DIR"/ppd/*.ppd "$SCRIPT_DIR"/ricoh-sp200.ppd; do
         if [ -f "$ppd" ]; then
             target="$PPD_DIR/$(basename "$ppd")"
-            sed "s|application/vnd.cups-raster 0 rastertoricohddst|application/vnd.cups-raster 0 $FILTER_DIR/rastertoricohddst|g; s|application/vnd.cups-raster 0 rastertoricohjbig|application/vnd.cups-raster 0 $FILTER_DIR/rastertoricohjbig|g" "$ppd" | run_root tee "$target" >/dev/null
+            sed "s|application/vnd.cups-raster 0 rastertoricohddst|application/vnd.cups-raster 0 $FILTER_DIR/rastertoricohddst|g; s|application/vnd.cups-raster 0 rastertoricohjbig|application/vnd.cups-raster 0 $FILTER_DIR/rastertoricohjbig|g; s|application/vnd.cups-raster 0 rastertoricohlhpl|application/vnd.cups-raster 0 $FILTER_DIR/rastertoricohlhpl|g" "$ppd" | run_root tee "$target" >/dev/null
             run_root chmod 644 "$target"
         fi
     done
     run_root chown -R root:wheel /Library/Printers/Ricoh 2>/dev/null || true
     run_root chown root:wheel "$PPD_DIR"/ricoh-sp*.ppd 2>/dev/null || true
-    run_root xattr -d com.apple.quarantine "$FILTER_DIR/rastertoricohddst" "$FILTER_DIR/rastertoricohjbig" 2>/dev/null || true
+    run_root xattr -d com.apple.quarantine "$FILTER_DIR/rastertoricohddst" "$FILTER_DIR/rastertoricohjbig" "$FILTER_DIR/rastertoricohlhpl" 2>/dev/null || true
 else
     for ppd in "$SCRIPT_DIR"/ppd/*.ppd "$SCRIPT_DIR"/ricoh-sp200.ppd; do
         if [ -f "$ppd" ]; then
@@ -338,6 +349,8 @@ if [ -n "$DEVICE_URI" ]; then
         SELECTED_PPD="$PPD_DIR/ricoh-sp100.ppd"; PRINTER_NAME="Ricoh_SP_100_DDST"
     elif echo "$DEVICE_URI" | grep -qi "SP%20111\|SP111\|SP112"; then
         SELECTED_PPD="$PPD_DIR/ricoh-sp111.ppd"; PRINTER_NAME="Ricoh_SP_111_DDST"
+    elif echo "$DEVICE_URI" | grep -qi "SP%20150\|SP150"; then
+        SELECTED_PPD="$PPD_DIR/ricoh-sp150.ppd"; PRINTER_NAME="Ricoh_SP_150_LHPL"
     elif echo "$DEVICE_URI" | grep -qi "SP%20210\|SP210\|SP211\|SP212"; then
         SELECTED_PPD="$PPD_DIR/ricoh-sp210.ppd"; PRINTER_NAME="Ricoh_SP_210_DDST"
     elif echo "$DEVICE_URI" | grep -qi "SP%20230\|SP230"; then

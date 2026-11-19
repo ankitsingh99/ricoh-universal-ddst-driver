@@ -31,8 +31,9 @@ cp -r ppd "${BIN_STAGE_DIR}/"
 cp ricoh-sp200.ppd "${BIN_STAGE_DIR}/"
 cp rastertoricohddst "${BIN_STAGE_DIR}/"
 cp rastertoricohjbig "${BIN_STAGE_DIR}/"
-cp setup.sh test_print.sh uninstall.sh enable_network_printing.sh web_interface.py Makefile README.md LICENSE AUTHORS.md "${BIN_STAGE_DIR}/"
-chmod 755 "${BIN_STAGE_DIR}"/*.sh "${BIN_STAGE_DIR}/rastertoricohddst" "${BIN_STAGE_DIR}/rastertoricohjbig"
+cp rastertoricohlhpl "${BIN_STAGE_DIR}/"
+cp setup.sh test_print.sh uninstall.sh detect_printer.sh enable_network_printing.sh web_interface.py Makefile README.md LICENSE AUTHORS.md "${BIN_STAGE_DIR}/"
+chmod 755 "${BIN_STAGE_DIR}"/*.sh "${BIN_STAGE_DIR}/rastertoricohddst" "${BIN_STAGE_DIR}/rastertoricohjbig" "${BIN_STAGE_DIR}/rastertoricohlhpl"
 
 (
     cd "$(dirname "${BIN_STAGE_DIR}")"
@@ -50,8 +51,9 @@ mkdir -p "${SRC_STAGE_DIR}"
 
 cp -r ppd "${SRC_STAGE_DIR}/"
 cp -r packaging "${SRC_STAGE_DIR}/"
-cp ricoh-sp200.ppd rastertoricohddst.c rastertoricohjbig.c "${SRC_STAGE_DIR}/"
-cp setup.sh test_print.sh uninstall.sh enable_network_printing.sh web_interface.py Makefile README.md LICENSE AUTHORS.md CONTRIBUTING.md CODE_OF_CONDUCT.md SECURITY.md "${SRC_STAGE_DIR}/"
+cp -r jbig "${SRC_STAGE_DIR}/"
+cp ricoh-sp200.ppd rastertoricohddst.c rastertoricohjbig.c rastertoricohlhpl.c "${SRC_STAGE_DIR}/"
+cp setup.sh test_print.sh uninstall.sh detect_printer.sh enable_network_printing.sh web_interface.py Makefile README.md LICENSE AUTHORS.md CONTRIBUTING.md CODE_OF_CONDUCT.md SECURITY.md "${SRC_STAGE_DIR}/"
 chmod 755 "${SRC_STAGE_DIR}"/*.sh "${SRC_STAGE_DIR}/packaging"/*.sh
 
 (

@@ -31,11 +31,28 @@ Consumer and SMB Ricoh DDST/GDI printers lack official Linux and BSD/macOS drive
 |---|---|---|---|---|
 | **Ricoh SP 100 Series** | SP 100, SP 100e, SP 100SU, SP 100SF | [`ppd/ricoh-sp100.ppd`](ppd/ricoh-sp100.ppd) | 600 DPI | Manual |
 | **Ricoh SP 110 Series** | SP 110, SP 111, SP 112 (incl. SU/SF) | [`ppd/ricoh-sp111.ppd`](ppd/ricoh-sp111.ppd) | 1200x600 DPI | Manual |
+| **Ricoh SP 150 Series** | SP 150, SP 150w, SP 150SU, SP 150SUw | [`ppd/ricoh-sp150.ppd`](ppd/ricoh-sp150.ppd) | 600 DPI | Manual |
 | **Ricoh SP 200 Series** | SP 200, SP 201N/NW, SP 202, SP 203, SP 204S/SF | [`ppd/ricoh-sp200.ppd`](ppd/ricoh-sp200.ppd) | 1200x600 DPI | Manual |
 | **Ricoh SP 210 Series** | SP 210, SP 211, SP 212, SP 213, SP 220 | [`ppd/ricoh-sp210.ppd`](ppd/ricoh-sp210.ppd) | 1200x600 DPI | Manual |
 | **Ricoh SP 230 Series** | SP 230DNw, SP 230SFNw | [`ppd/ricoh-sp230.ppd`](ppd/ricoh-sp230.ppd) | 1200x600 DPI | Auto Duplex |
 | **Ricoh SP 310 / 325 / 3710** | SP 310DN, SP 311DN/SFN, SP 325, SP 3710 | [`ppd/ricoh-sp310.ppd`](ppd/ricoh-sp310.ppd) | 1200x600 DPI | Auto Duplex + Multi-Tray |
 | **OEM Clones** | Equivalent Gestetner, Lanier, Savin, Nashuatec models | Matching PPD | Match Base | Match Base |
+
+---
+
+## Auto Printer Model Detection
+
+The driver suite includes an automated hardware discovery and protocol classification engine that scans USB buses (via CUPS backends, macOS IOKit, and Linux sysfs) and IEEE 1284 Device IDs to identify connected Ricoh laser printer models and automatically map their optimal protocol (**DDST** vs **LHPL**):
+
+```bash
+# Run auto-detection
+./detect_printer.sh
+# Or via make:
+make detect
+
+# Machine-readable JSON output (for scripting/integrations):
+./detect_printer.sh --json
+```
 
 ---
 
@@ -121,6 +138,7 @@ sudo make install
 |---|---|---|---|
 | **SP 100 / SP 100SU / SP 100SF** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp100.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp100.ppd` | `/usr/local/share/cups/model/ricoh-sp100.ppd` |
 | **SP 110 / SP 111 / SP 112** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp111.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp111.ppd` | `/usr/local/share/cups/model/ricoh-sp111.ppd` |
+| **SP 150 / SP 150w / SP 150SU** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp150.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp150.ppd` | `/usr/local/share/cups/model/ricoh-sp150.ppd` |
 | **SP 200 / SP 201 / SP 204** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp200.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp200.ppd` | `/usr/local/share/cups/model/ricoh-sp200.ppd` |
 | **SP 210 / SP 212 / SP 213 / SP 220** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp210.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp210.ppd` | `/usr/local/share/cups/model/ricoh-sp210.ppd` |
 | **SP 230DNw / SP 230SFNw** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp230.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp230.ppd` | `/usr/local/share/cups/model/ricoh-sp230.ppd` |
@@ -299,10 +317,13 @@ For the complete in-depth engineering specification, protocol breakdown, and seq
 | File / Directory | Description |
 |---|---|
 | [`SYSTEM_DESIGN.md`](SYSTEM_DESIGN.md) | Comprehensive technical architecture & system design document |
-| [`rastertoricohddst.c`](rastertoricohddst.c) | Native universal C source code for Ricoh DDST filter |
+| [`rastertoricohddst.c`](rastertoricohddst.c) | Native universal C filter for Ricoh DDST laser printers |
+| [`rastertoricohlhpl.c`](rastertoricohlhpl.c) | Native C filter for Ricoh SP 150 series (LHPL protocol) |
 | [`rastertoricohjbig.c`](rastertoricohjbig.c) | Legacy SP 200 filter (maintained for backward compatibility) |
+| [`detect_printer.sh`](detect_printer.sh) | Automated hardware discovery & protocol identification utility |
 | [`enable_network_printing.sh`](enable_network_printing.sh) | AirPrint & IPP network printing configuration utility |
-| [`ppd/`](ppd/) | Adobe-compliant PPD library covering SP 100, 110, 200, 210, 230, 310 series |
+| [`jbig/`](jbig/) | Vendored JBIG T.85 encoder sources |
+| [`ppd/`](ppd/) | Adobe-compliant PPD library covering SP 100, 110, 150, 200, 210, 230, 310 series |
 | [`tests/`](tests/) | Unit, coverage, and network integration test suite |
 | [`packaging/`](packaging/) | Packaging automation scripts (`.deb`, `.pkg`, `.tar.gz`) |
 | [`setup.sh`](setup.sh) | Automated multi-model installer script |

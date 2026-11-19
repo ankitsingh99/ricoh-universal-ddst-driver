@@ -25,7 +25,7 @@ body:
     id: printer_model
     attributes:
       label: Printer Model (if applicable)
-      placeholder: e.g., Ricoh SP 111 / SP 200 / SP 210 / SP 230 / SP 310
+      placeholder: e.g., Ricoh SP 111 / SP 150 / SP 200 / SP 210 / SP 230 / SP 310
     validations:
       required: false
 

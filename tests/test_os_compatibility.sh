@@ -260,7 +260,7 @@ echo "[7/8] Validating PPD Profiles with cupstestppd..."
 if command -v cupstestppd >/dev/null 2>&1; then
     cupstestppd -W filters ppd/*.ppd ricoh-sp200.ppd > "${TMP_DIR}/ppd_test.log"
     grep -q "PASS" "${TMP_DIR}/ppd_test.log" || { echo "FAIL: PPD syntax verification failed"; exit 1; }
-    echo "  [PASS] All 7 PPD profiles conform to Adobe PPD 4.3 specification."
+    echo "  [PASS] All 8 PPD profiles conform to Adobe PPD 4.3 specification."
 else
     echo "  [*] cupstestppd not found; skipping PPD validation."
 fi
@@ -276,9 +276,10 @@ cc -O2 ${CPPFLAGS} ${LDFLAGS} -o "${TMP_DIR}/gen_raster" "${TEST_DIR}/generate_t
 "${TMP_DIR}/gen_raster" "${TMP_DIR}/test_a4.ras" mono
 "${TMP_DIR}/gen_raster" "${TMP_DIR}/test_duplex.ras" duplex
 
-# Pipe through rastertoricohddst
+# Pipe through filters
 ./rastertoricohddst 123 testuser "Test Job" 1 "" "${TMP_DIR}/test_a4.ras" > "${TMP_DIR}/ddst_output.bin"
 ./rastertoricohjbig 124 testuser "Test Job" 1 "" "${TMP_DIR}/test_a4.ras" > "${TMP_DIR}/jbig_output.bin"
+./rastertoricohlhpl 125 testuser "Test Job" 1 "" "${TMP_DIR}/test_a4.ras" > "${TMP_DIR}/lhpl_output.bin"
 
 # Verify DDST PJL wire signatures
 grep -qa "@PJL SET COMPRESS=JBIG" "${TMP_DIR}/ddst_output.bin" || { echo "FAIL: DDST output missing JBIG compress header"; exit 1; }
@@ -292,8 +293,17 @@ grep -qa "@PJL EOJ" "${TMP_DIR}/ddst_output.bin" || { echo "FAIL: DDST output mi
 grep -qa "@PJL SET COMPRESS=JBIG" "${TMP_DIR}/jbig_output.bin" || { echo "FAIL: JBIG output missing JBIG compress header"; exit 1; }
 grep -qa "@PJL EOJ" "${TMP_DIR}/jbig_output.bin" || { echo "FAIL: JBIG output missing EOJ"; exit 1; }
 
+# Verify LHPL wire signatures (SP 150 series protocol)
+grep -qa "@PJL ENTER LANGUAGE=LHPL" "${TMP_DIR}/lhpl_output.bin" || { echo "FAIL: LHPL output missing ENTER LANGUAGE=LHPL"; exit 1; }
+grep -qa "@PJL JOB NAME=PRINTER" "${TMP_DIR}/lhpl_output.bin" || { echo "FAIL: LHPL output missing JOB NAME=PRINTER"; exit 1; }
+grep -qa "LH@sj" "${TMP_DIR}/lhpl_output.bin" || { echo "FAIL: LHPL output missing @sj start job frame"; exit 1; }
+grep -qa "LH@sp" "${TMP_DIR}/lhpl_output.bin" || { echo "FAIL: LHPL output missing @sp start page frame"; exit 1; }
+grep -qa "LH@ep" "${TMP_DIR}/lhpl_output.bin" || { echo "FAIL: LHPL output missing @ep end page frame"; exit 1; }
+grep -qa "@PJL EOJ" "${TMP_DIR}/lhpl_output.bin" || { echo "FAIL: LHPL output missing EOJ"; exit 1; }
+
 echo "  [PASS] rastertoricohddst produced $(wc -c < "${TMP_DIR}/ddst_output.bin" | tr -d ' ') bytes of valid DDST/PJL protocol data."
 echo "  [PASS] rastertoricohjbig produced $(wc -c < "${TMP_DIR}/jbig_output.bin" | tr -d ' ') bytes of valid DDST/PJL protocol data."
+echo "  [PASS] rastertoricohlhpl produced $(wc -c < "${TMP_DIR}/lhpl_output.bin" | tr -d ' ') bytes of valid LHPL protocol data."
 
 echo ""
 echo "========================================================"
