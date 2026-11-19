@@ -15,6 +15,7 @@ typedef struct {
 } Buf;
 
 extern int test_fail_malloc;
+extern int test_fail_malloc_after;
 extern int test_fail_calloc;
 extern int test_fail_realloc;
 extern int test_fake_null_time;
@@ -120,6 +121,11 @@ int main(int argc, char* argv[])
         test_fail_malloc = 1;
         driver_main_ddst(7, argv_mem1);
         test_fail_malloc = 0;
+
+        /* Page bitmap allocates fine, page encode buffer fails: job must abort */
+        test_fail_malloc_after = 2;
+        assert(driver_main_ddst(7, argv_mem1) == 1);
+        assert(test_fail_malloc_after == 0);
     }
 
     if (argc >= 3) {

@@ -7,12 +7,14 @@
 #include <time.h>
 
 int test_fail_malloc = 0;
+int test_fail_malloc_after = 0; /* N > 0: the Nth MALLOC from now fails, once */
 int test_fail_calloc = 0;
 int test_fail_realloc = 0;
 int test_fake_null_time = 0;
 
 void* test_mock_malloc(size_t sz) {
     if (test_fail_malloc) return NULL;
+    if (test_fail_malloc_after > 0 && --test_fail_malloc_after == 0) return NULL;
     return malloc(sz);
 }
 
