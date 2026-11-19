@@ -12,9 +12,11 @@ import json
 import re
 import socket
 import subprocess
+import tempfile
 import cups
 from datetime import datetime
 from flask import Flask, render_template_string, request, redirect, url_for, flash, Response
+from werkzeug.utils import secure_filename
 import qrcode
 import qrcode.image.svg
 
@@ -1510,8 +1512,13 @@ def upload():
         options['print-scaling'] = 'auto-fit'
     
     scaling_desc = SCALING_MODES.get(scaling_mode, scaling_mode)
-    safe_filename = "".join([c for c in file.filename if c.isalnum() or c in "._- "])
-    tmp_path = os.path.join("/tmp", f"ricoh_print_{int(time.time())}_{safe_filename}")
+    safe_display_name = secure_filename(file.filename or "") or "document"
+    file_ext = os.path.splitext(safe_display_name)[1].lower()
+    if not (re.match(r'^\.[a-z0-9]{1,8}$', file_ext)):
+        file_ext = ".tmp"
+
+    with tempfile.NamedTemporaryFile(prefix="ricoh_print_", suffix=file_ext, delete=False) as tmp_file:
+        tmp_path = tmp_file.name
     
     try:
         file.save(tmp_path)
@@ -1524,7 +1531,7 @@ def upload():
         
         save_job_history(job_id, {
             "title": doc_title,
-            "filename": file.filename,
+            "filename": safe_display_name,
             "source": source_str,
             "size_kb": int(os.path.getsize(tmp_path) / 1024),
             "timestamp": datetime.now().isoformat(),
@@ -1538,7 +1545,7 @@ def upload():
         flash(f"Failed to submit print job: {e}", "danger")
         return redirect(url_for('upload_page'))
     finally:
-        if os.path.exists(tmp_path):
+        if tmp_path and os.path.exists(tmp_path):
             try:
                 os.remove(tmp_path)
             except OSError:

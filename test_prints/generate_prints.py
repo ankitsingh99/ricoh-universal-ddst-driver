@@ -226,7 +226,8 @@ def run():
             tf.write(test_txt)
             tf_path = tf.name
 
-        ras_path = tempfile.mktemp(suffix=".ras")
+        with tempfile.NamedTemporaryFile(suffix=".ras", delete=False) as rf_tmp:
+            ras_path = rf_tmp.name
 
         try:
             # 2. Render to CUPS raster

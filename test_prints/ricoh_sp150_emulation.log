@@ -2,11 +2,11 @@
 RICOH LHPL PROTOCOL EMULATION & STREAM DISSECTION REPORT
 ================================================================================
 File Name:            ricoh_sp150_test_print.prn
-File Size:            70,814 bytes
-SHA-256 Digest:       f7a66326acc96814fd0ded2877435e9be7d4eeb5d18412584c5db54480f58297
+File Size:            70,800 bytes
+SHA-256 Digest:       3e8aaf70e10cef8aea238ce8e51f3c4f967936e7a439cadb9dd29865bf9714a4
 Protocol Family:      Ricoh LHPL (SP 150 Series / Lenovo OEM Engine)
 Emulation Engine:     Universal LHPL Virtual ASIC v0.1.0
-Dissection Timestamp: 2026-11-19 20:00:01
+Dissection Timestamp: 2026-11-19 20:25:03
 --------------------------------------------------------------------------------
 
 [STAGE 1] PJL HEADER DIRECTIVES
@@ -16,7 +16,7 @@ Dissection Timestamp: 2026-11-19 20:00:01
   @PJL SET JOBATTR=USR:testuser
   @PJL SET JOBATTR=DOC:Ricoh SP 150 / SP 150w / SP 150SU Test
   @PJL SET JOBATTR=DATE:11/19/2026
-  @PJL SET JOBATTR=TIME:20:00:01
+  @PJL SET JOBATTR=TIME:20:25:03
   @PJL SET DUPLEX=OFF
   @PJL SET MEDIASOURCE=0
   @PJL SET MDPXS=0
@@ -42,23 +42,23 @@ Dissection Timestamp: 2026-11-19 20:00:01
     Raster Width:     5,120 pixels
     Raster Height:    6,978 scanlines (including 128 top pad rows)
     Uncompressed:     4,465,920 bytes
-    Compressed Size:  70,190 bytes
+    Compressed Size:  70,176 bytes
     Resolution:       600 DPI
     Page Dimensions:  210.0 mm x 297.0 mm (2100 x 2970 in 0.1mm units)
     XOR Checksum:     Calc: 0x84 | Wire: 0x84 -> [MATCH - PASS]
-    Raw Header Hex:   1b4c48407370020100140000421b0000002544002e1201002e12010000000000
+    Raw Header Hex:   1b4c48407370020100140000421b000000254400201201002012010000000000
 
   [STAGE 3] JBIG-KIT T.85 COMPRESSED BITMAP PAYLOAD
     Payload Offset:   0x0000021B
-    Payload Length:   70,190 bytes
+    Payload Length:   70,176 bytes
     BIH Raw Hex:      000001000000140000001b420000008008000040
     T.85 Profile:     Single-Progression Bi-level (D=0, P=1)
     Stripe Height:    128 scanlines (L0)
     ATMOV Offset:     MX=8, MY=0
-    Compression Ratio:63.63:1 (98.43% space savings)
+    Compression Ratio:63.64:1 (98.43% space savings)
 
   Frame 3: @ep (End Page Frame)
-    Offset:           0x00011449
+    Offset:           0x0001143B
     Frame Size:       64 bytes
     XOR Checksum:     Calc: 0x4A | Wire: 0x4A -> [MATCH - PASS]
 

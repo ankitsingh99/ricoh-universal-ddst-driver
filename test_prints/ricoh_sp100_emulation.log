@@ -2,18 +2,18 @@
 RICOH DDST PROTOCOL EMULATION & STREAM DISSECTION REPORT
 ================================================================================
 File Name:            ricoh_sp100_test_print.prn
-File Size:            65,790 bytes
-SHA-256 Digest:       13d711a5e7ba89959ec418f6f77ba0934928f8b1b6fbe3f2ed354236294aa32d
+File Size:            66,003 bytes
+SHA-256 Digest:       b032c1d0c2bd3fc01737011cb1cc06d6fd05618eebca4fdd3215328ef47cbcaa
 Protocol Family:      Ricoh DDST v1 (Bi-level JBIG Stream Framing)
 Emulation Engine:     Universal DDST Virtual ASIC v0.1.0
-Dissection Timestamp: 2026-11-19 20:00:01
+Dissection Timestamp: 2026-11-19 20:25:02
 --------------------------------------------------------------------------------
 
 [STAGE 1] STATE MACHINE EMULATION & PROTOCOL SEQUENCING
 --------------------------------------------------------------------------------
   [0x00000000] [STATE: INIT]        UEL Prefix Detected: <ESC>%-12345X (VALID)
   [0x00000000] [STATE: ESC_SEQ]     %-12345X@PJL
-  [0x0000000F] [STATE: PJL_CONFIG]  TIMESTAMP       = 2026/11/19 20:00:01
+  [0x0000000F] [STATE: PJL_CONFIG]  TIMESTAMP       = 2026/11/19 20:25:02
   [0x00000037] [STATE: PJL_CONFIG]  FILENAME        = printjob
   [0x00000053] [STATE: PJL_CONFIG]  COMPRESS        = JBIG
   [0x0000006B] [STATE: PJL_CONFIG]  USERNAME        = lp
@@ -28,16 +28,16 @@ Dissection Timestamp: 2026-11-19 20:00:01
   [0x0000013B] [STATE: PJL_CONFIG]  PAPERWIDTH      = 4792
   [0x00000155] [STATE: PJL_CONFIG]  PAPERLENGTH     = 6850
   [0x00000170] [STATE: PJL_CONFIG]  RESOLUTION      = 600
-  [0x00000189] [STATE: PJL_CONFIG]  IMAGELEN        = 65299
-  [0x000001A2] [STATE: JBIG_STREAM] Payload Length: 65,299 bytes (offset 0x000001A2..0x000100B5)
-  [0x000100B5] [STATE: PJL_CONFIG]  DOTCOUNT        = 2641751
-  [0x000100D0] [STATE: PJL_CONFIG]  PAGESTATUS      = END
-  [0x000100E9] [STATE: JOB_END]     @PJL EOJ (End of Job Marker)
-  [0x000100F3] [STATE: ESC_SEQ]     %-12345X
+  [0x00000189] [STATE: PJL_CONFIG]  IMAGELEN        = 65512
+  [0x000001A2] [STATE: JBIG_STREAM] Payload Length: 65,512 bytes (offset 0x000001A2..0x0001018A)
+  [0x0001018A] [STATE: PJL_CONFIG]  DOTCOUNT        = 2641856
+  [0x000101A5] [STATE: PJL_CONFIG]  PAGESTATUS      = END
+  [0x000101BE] [STATE: JOB_END]     @PJL EOJ (End of Job Marker)
+  [0x000101C8] [STATE: ESC_SEQ]     %-12345X
 
 [STAGE 2] PJL PARAMETER TABLE & JOB SPECIFICATION
 --------------------------------------------------------------------------------
-  TIMESTAMP           : 2026/11/19 20:00:01
+  TIMESTAMP           : 2026/11/19 20:25:02
   FILENAME            : printjob
   COMPRESS            : JBIG
   USERNAME            : lp
@@ -52,13 +52,13 @@ Dissection Timestamp: 2026-11-19 20:00:01
   PAPERWIDTH          : 4792
   PAPERLENGTH         : 6850
   RESOLUTION          : 600
-  IMAGELEN            : 65299
-  DOTCOUNT            : 2641751
+  IMAGELEN            : 65512
+  DOTCOUNT            : 2641856
 
 [STAGE 3] JBIG BIE (BI-LEVEL IMAGE ENTITY) PAYLOAD ANALYSIS
 --------------------------------------------------------------------------------
   Payload Offset:     0x000001A2
-  Payload Size:       65,299 bytes
+  Payload Size:       65,512 bytes
   BIH Raw Hex:        00000100000012b800001ac20000008000000348
   Resolution (XD x YD): 4792 x 6850 pixels
   Bit Planes (P):     1 plane (1-bit monochrome)
@@ -69,7 +69,7 @@ Dissection Timestamp: 2026-11-19 20:00:01
   Options Flags:      0x48 (TPOS=False)
   Physical Page Size: 202.9 mm x 290.0 mm (7.99" x 11.42")
   Total Page Pixels:  32,825,200 dots
-  Reported Dot Count: 2,641,751 dots
+  Reported Dot Count: 2,641,856 dots
   Estimated Coverage: 8.048% toner coverage
 
 [STAGE 4] PROTOCOL CONFORMANCE & ASIC VERIFICATION CHECKS
