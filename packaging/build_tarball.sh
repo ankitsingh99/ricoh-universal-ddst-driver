@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Ricoh Universal DDST Driver - Release Archive (.tar.gz / .zip) Generator
+# Ricoh Universal DDST/GDI/LHPL Driver - Release Archive (.tar.gz / .zip) Generator
 # ==============================================================================
 set -euo pipefail
 

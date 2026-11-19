@@ -1,4 +1,4 @@
-# Ricoh Universal DDST/GDI CUPS Driver Suite (Linux, BSD, macOS & Unix)
+# Ricoh Universal DDST/GDI/LHPL CUPS Driver Suite (Linux, BSD, macOS & Unix)
 
 [![CI](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/actions/workflows/ci.yml/badge.svg)](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/ankitsingh99/ricoh-universal-ddst-driver?color=blue)](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/releases)
@@ -7,16 +7,16 @@
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20FreeBSD%20%7C%20OpenBSD%20%7C%20NetBSD%20%7C%20macOS%20%7C%20Solaris-blue.svg)](#supported-operating-systems)
 [![CUPS Version](https://img.shields.io/badge/CUPS-2.0%2B-blue.svg)](#prerequisites--dependencies)
 
-A native, high-performance CUPS raster filter and Adobe-compliant PPD driver suite for **Ricoh DDST/GDI monochrome laser and multifunction printers** on **Linux**, **FreeBSD**, **OpenBSD**, **NetBSD**, **macOS** (Apple Silicon M1/M2/M3/M4 & Intel x86_64), and **Solaris/illumos**.
+A native, high-performance CUPS raster filter and Adobe-compliant PPD driver suite for **Ricoh DDST, GDI, and LHPL monochrome laser and multifunction printers** on **Linux**, **FreeBSD**, **OpenBSD**, **NetBSD**, **macOS** (Apple Silicon M1/M2/M3/M4 & Intel x86_64), and **Solaris/illumos**.
 
-Consumer and SMB Ricoh DDST/GDI printers lack official Linux and BSD/macOS drivers and are absent from standard printer stacks (`foo2zjs`, OpenPrinting, Gutenprint, HPLIP). This project provides a direct native C implementation of the PJL + ITU-T T.82 JBIG1 wire protocol reverse-engineered from USB traffic.
+Consumer and SMB Ricoh laser printers lack official Linux and BSD/macOS drivers and are absent from standard printer stacks (`foo2zjs`, OpenPrinting, Gutenprint, HPLIP). This project provides direct native C implementations of both the **Ricoh DDST wire protocol** (PJL + ITU-T T.82 JBIG1) and the **Ricoh LHPL wire protocol** (PJL + 64-byte framing + ITU-T T.85 JBIG-KIT) reverse-engineered from USB traffic.
 
 ---
 
 > [!IMPORTANT]
 > **Hardware Testing & Model Support Status**
 > - **Tested Hardware**: This driver has been physically tested and verified with the **Ricoh SP 200** printer.
-> - **Extrapolated Models**: Support for other models (SP 100, SP 110/111/112, SP 210, SP 230, and SP 310 series) has been **extrapolated** from DDST protocol specifications and reverse-engineered packet captures, but has **not yet been physically tested on those individual models** by the maintainer.
+> - **Extrapolated Models**: Support for other models (SP 100, SP 110/111/112, SP 150, SP 210, SP 230, and SP 310 series) has been **extrapolated** from DDST and LHPL protocol specifications and reverse-engineered packet captures, but has **not yet been physically tested on those individual models** by the maintainer.
 > - **Community Testing & Discussions**: If you use this driver with other Ricoh models and encounter any issues or errors, please [**Open a Discussion on GitHub**](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/discussions) or submit an issue so we can help and refine compatibility.
 > - **Contributions**: Community contributions (hardware verification reports, USB packet captures, and pull requests) are warmly welcomed!
 
@@ -27,16 +27,64 @@ Consumer and SMB Ricoh DDST/GDI printers lack official Linux and BSD/macOS drive
 
 ## Supported Printers & Hardware Matrix
 
-| Series Family | Supported Models | PPD Profile | Max Resolution | Duplex / Trays |
-|---|---|---|---|---|
-| **Ricoh SP 100 Series** | SP 100, SP 100e, SP 100SU, SP 100SF | [`ppd/ricoh-sp100.ppd`](ppd/ricoh-sp100.ppd) | 600 DPI | Manual |
-| **Ricoh SP 110 Series** | SP 110, SP 111, SP 112 (incl. SU/SF) | [`ppd/ricoh-sp111.ppd`](ppd/ricoh-sp111.ppd) | 1200x600 DPI | Manual |
-| **Ricoh SP 150 Series** | SP 150, SP 150w, SP 150SU, SP 150SUw | [`ppd/ricoh-sp150.ppd`](ppd/ricoh-sp150.ppd) | 600 DPI | Manual |
-| **Ricoh SP 200 Series** | SP 200, SP 201N/NW, SP 202, SP 203, SP 204S/SF | [`ppd/ricoh-sp200.ppd`](ppd/ricoh-sp200.ppd) | 1200x600 DPI | Manual |
-| **Ricoh SP 210 Series** | SP 210, SP 211, SP 212, SP 213, SP 220 | [`ppd/ricoh-sp210.ppd`](ppd/ricoh-sp210.ppd) | 1200x600 DPI | Manual |
-| **Ricoh SP 230 Series** | SP 230DNw, SP 230SFNw | [`ppd/ricoh-sp230.ppd`](ppd/ricoh-sp230.ppd) | 1200x600 DPI | Auto Duplex |
-| **Ricoh SP 310 / 325 / 3710** | SP 310DN, SP 311DN/SFN, SP 325, SP 3710 | [`ppd/ricoh-sp310.ppd`](ppd/ricoh-sp310.ppd) | 1200x600 DPI | Auto Duplex + Multi-Tray |
-| **OEM Clones** | Equivalent Gestetner, Lanier, Savin, Nashuatec models | Matching PPD | Match Base | Match Base |
+| Series Family | Supported Models | Protocol | Native Filter | PPD Profile | Max Resolution | Features |
+|---|---|---|---|---|---|---|
+| **Ricoh SP 100 Series** | SP 100, SP 100e, SP 100SU, SP 100SF | **DDST v1** | `rastertoricohddst` | [`ppd/ricoh-sp100.ppd`](ppd/ricoh-sp100.ppd) | 600 DPI | Manual Feed |
+| **Ricoh SP 110 Series** | SP 110, SP 111, SP 112 (incl. SU/SF) | **DDST v1** | `rastertoricohddst` | [`ppd/ricoh-sp111.ppd`](ppd/ricoh-sp111.ppd) | 1200x600 DPI | Manual Feed, Fanless |
+| **Ricoh SP 150 Series** | SP 150, SP 150w, SP 150SU, SP 150SUw | **LHPL** | `rastertoricohlhpl` | [`ppd/ricoh-sp150.ppd`](ppd/ricoh-sp150.ppd) | 600 DPI | 64-byte framing, T.85 JBIG |
+| **Ricoh SP 200 Series** | SP 200, SP 201N/NW, SP 202, SP 203, SP 204S/SF | **DDST v1** | `rastertoricohddst` | [`ppd/ricoh-sp200.ppd`](ppd/ricoh-sp200.ppd) | 1200x600 DPI | Manual Feed, 22 ppm |
+| **Ricoh SP 210 Series** | SP 210, SP 211, SP 212, SP 213, SP 220 | **DDST v1** | `rastertoricohddst` | [`ppd/ricoh-sp210.ppd`](ppd/ricoh-sp210.ppd) | 1200x600 DPI | Manual Feed, Fast-warmup |
+| **Ricoh SP 230 Series** | SP 230DNw, SP 230SFNw | **DDST v1** | `rastertoricohddst` | [`ppd/ricoh-sp230.ppd`](ppd/ricoh-sp230.ppd) | 1200x600 DPI | Hardware Auto Duplex |
+| **Ricoh SP 310 / 325 / 3710** | SP 310DN, SP 311DN/SFN, SP 325, SP 3710 | **DDST v1** | `rastertoricohddst` | [`ppd/ricoh-sp310.ppd`](ppd/ricoh-sp310.ppd) | 1200x600 DPI | Auto Duplex + Multi-Tray |
+| **Lenovo OEM Clones** | Lenovo M100D, L100D | **LHPL** | `rastertoricohlhpl` | [`ppd/ricoh-sp150.ppd`](ppd/ricoh-sp150.ppd) | 600 DPI | Compatible LHPL engine |
+| **Generic OEM Clones** | Equivalent Gestetner, Lanier, Savin, Nashuatec models | DDST / LHPL | Matching Filter | Matching PPD | Match Base | Match Base |
+
+---
+
+## Dual Protocol Architecture: DDST vs LHPL
+
+The suite accepts standard CUPS raster (`application/vnd.cups-raster`) and routes it through the appropriate native protocol filter based on the target printer engine:
+
+```
+                     ┌──────────────────────────────────────────────┐
+                     │          Application / Spooler (CUPS)        │
+                     │  (PDF / PostScript / Images / iOS AirPrint)  │
+                     └──────────────────────┬───────────────────────┘
+                                            │
+                                            ▼
+                     ┌──────────────────────────────────────────────┐
+                     │     Universal GDI Input Layer (Raster)       │
+                     │         application/vnd.cups-raster          │
+                     └──────────────┬────────────────┬──────────────┘
+                                    │                │
+            ┌───────────────────────┘                └────────────────────────┐
+            ▼                                                                 ▼
+ ┌────────────────────────────────────┐                   ┌──────────────────────────────────────┐
+ │    DDST Native Filter              │                   │    LHPL Native Filter                │
+ │    (rastertoricohddst)             │                   │    (rastertoricohlhpl)               │
+ ├────────────────────────────────────┤                   ├──────────────────────────────────────┤
+ │ • Models: SP 100, 111, 200, 210,   │                   │ • Models: SP 150, SP 150w, SP 150SU, │
+ │   SP 230, SP 310 series            │                   │   Lenovo M100D, L100D                │
+ │ • T.82 JBIG1 Bi-level Compression  │                   │ • T.85 JBIG-KIT Single-Progression   │
+ │ • PJL SET IMAGELEN & DOTCOUNT      │                   │ • 64-byte Binary Frames (@sj/@sp/@ep)│
+ │ • 64-bit Popcount Intrinsics       │                   │ • 1-byte XOR Checksum Validation     │
+ └─────────────────┬──────────────────┘                   └──────────────────┬───────────────────┘
+                   │                                                         │
+                   ▼                                                         ▼
+ ┌────────────────────────────────────┐                   ┌──────────────────────────────────────┐
+ │ DDST PJL Stream to USB / Socket    │                   │ LHPL PJL Stream to USB / Socket      │
+ └────────────────────────────────────┘                   └──────────────────────────────────────┘
+```
+
+1. **Ricoh DDST Protocol (`rastertoricohddst`)**:
+   - Used by Ricoh SP 100, SP 111, SP 200, SP 210, SP 230, and SP 310 series.
+   - Encapsulates bi-level bitmap data in ITU-T T.82 JBIG1 format.
+   - Uses HP-PJL directives with `@PJL SET IMAGELEN` and calculates per-page hardware dot counts via `@PJL SET DOTCOUNT` to trigger page ejection.
+
+2. **Ricoh LHPL Protocol (`rastertoricohlhpl`)**:
+   - Used by Ricoh SP 150 series and compatible Lenovo OEM engines.
+   - Employs 64-byte binary packet frames with XOR checksums (`@sj` Start Job, `@sp` Start Page, `@ep` End Page).
+   - Encodes data via standard ITU-T T.85 single-progression JBIG compression with $L_0=128$ stripe height, SDRST resets, and 128 blank top-padding scanlines to prevent engine stall.
 
 ---
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Ricoh Universal DDST Driver - macOS PKG Installer Generator
+# Ricoh Universal DDST/GDI/LHPL Driver - macOS PKG Installer Generator
 # ==============================================================================
 set -euo pipefail
 
@@ -11,7 +11,7 @@ mkdir -p "${PKG_OUTPUT_DIR}"
 PKG_OUTPUT_DIR="$(cd "${PKG_OUTPUT_DIR}" && pwd)"
 
 echo "========================================================"
-echo " Building macOS PKG: Ricoh Universal DDST Driver v${VERSION}"
+echo " Building macOS PKG: Ricoh Universal DDST/GDI/LHPL Driver v${VERSION}"
 echo "========================================================"
 
 if [ "$(uname -s)" != "Darwin" ]; then
@@ -67,7 +67,7 @@ xattr -d com.apple.quarantine /Library/Printers/Ricoh/Filter/rastertoricohjbig 2
 # Refresh CUPS
 launchctl kickstart -k system/org.cups.cupsd 2>/dev/null || true
 
-echo "Ricoh Universal DDST Driver installed successfully."
+echo "Ricoh Universal DDST/GDI/LHPL Driver installed successfully."
 exit 0
 EOF
 chmod 755 "${SCRIPTS_DIR}/postinstall"

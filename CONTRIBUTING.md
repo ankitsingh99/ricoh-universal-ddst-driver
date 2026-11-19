@@ -1,6 +1,6 @@
-# Contributing to Ricoh Universal DDST Driver Suite
+# Contributing to Ricoh Universal DDST/GDI/LHPL Driver Suite
 
-Thank you for your interest in improving the Ricoh Universal DDST CUPS Driver Suite! Community contributions help keep this driver working across diverse Linux distributions, macOS versions, and the wide range of Ricoh DDST/GDI printer models.
+Thank you for your interest in improving the Ricoh Universal DDST/GDI/LHPL CUPS Driver Suite! Community contributions help keep this driver working across diverse Linux distributions, macOS versions, and the wide range of Ricoh DDST, GDI, and LHPL printer models.
 
 ---
 

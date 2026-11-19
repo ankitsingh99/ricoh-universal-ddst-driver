@@ -1,5 +1,5 @@
 # ==============================================================================
-# Ricoh Universal DDST/GDI Driver Suite - Universal Makefile
+# Ricoh Universal DDST/GDI/LHPL Driver Suite - Universal Makefile
 # Supports: Linux, FreeBSD, OpenBSD, NetBSD, macOS (Darwin), Solaris/illumos, AIX
 # Compatible with both GNU make (gmake) and BSD make (bmake / fmake)
 # ==============================================================================
@@ -25,7 +25,7 @@ LIBS          ?= -lcups -lcupsimage -ljbig
 all: build
 
 help:
-	@echo "Ricoh Universal DDST/GDI Driver Suite Makefile"
+	@echo "Ricoh Universal DDST/GDI/LHPL Driver Suite Makefile"
 	@echo "--------------------------------------------------------"
 	@echo "make build           - Compile the CUPS raster filter binaries"
 	@echo "sudo make install    - Install filters and PPDs to system CUPS directories"

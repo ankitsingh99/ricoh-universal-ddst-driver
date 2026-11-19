@@ -1,5 +1,5 @@
 # ==============================================================================
-# Ricoh Universal DDST/GDI CUPS Network Print Server Container
+# Ricoh Universal DDST/GDI/LHPL CUPS Network Print Server Container
 # Registry: ghcr.io/ankitsingh99/ricoh-universal-ddst-driver
 # ==============================================================================
 
@@ -22,8 +22,8 @@ RUN make clean && make CFLAGS="-O2 -Wall -Wextra" build
 # Stage 2: Runtime CUPS Print Server
 FROM debian:bookworm-slim
 
-LABEL org.opencontainers.image.title="Ricoh Universal DDST Driver CUPS Server" \
-      org.opencontainers.image.description="Network CUPS Print Server with pre-installed Ricoh DDST/GDI driver suite" \
+LABEL org.opencontainers.image.title="Ricoh Universal DDST/GDI/LHPL Driver CUPS Server" \
+      org.opencontainers.image.description="Network CUPS Print Server with pre-installed Ricoh DDST/GDI/LHPL driver suite" \
       org.opencontainers.image.url="https://github.com/ankitsingh99/ricoh-universal-ddst-driver" \
       org.opencontainers.image.source="https://github.com/ankitsingh99/ricoh-universal-ddst-driver" \
       org.opencontainers.image.licenses="MIT"

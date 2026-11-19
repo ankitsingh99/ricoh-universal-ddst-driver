@@ -1,4 +1,4 @@
-# Ricoh Driver Suite — Test Prints & Protocol Emulation Logs
+# Ricoh Universal Driver Suite (DDST/GDI/LHPL) — Test Prints & Protocol Emulation Logs
 
 This directory contains pre-generated wire-level raw print captures (`.prn`) and hardware ASIC protocol emulation logs (`.log`) for every supported Ricoh laser printer model.
 

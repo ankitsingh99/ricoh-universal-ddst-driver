@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Ricoh Universal DDST/GDI Driver Suite - Auto Printer Model Detection Utility
+# Ricoh Universal DDST/GDI/LHPL Driver Suite - Auto Printer Model Detection Utility
 # Inspects USB buses, IEEE 1284 Device IDs, and CUPS discovery backends to
 # identify connected Ricoh laser printer models and select matching protocols.
 #

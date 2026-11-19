@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Ricoh DDST Driver - Comprehensive Multi-OS Compatibility Test Suite
+# Ricoh DDST/GDI/LHPL Driver - Comprehensive Multi-OS Compatibility Test Suite
 # Validates compatibility across Linux, FreeBSD, OpenBSD, NetBSD, macOS, and Solaris
 # ==============================================================================
 set -euo pipefail
@@ -16,7 +16,7 @@ UNAME="$(uname -s)"
 ARCH="$(uname -m)"
 
 echo "========================================================"
-echo " Ricoh Universal Driver: Multi-OS Compatibility Suite"
+echo " Ricoh Universal Driver (DDST/GDI/LHPL): Multi-OS Compatibility Suite"
 echo " Host OS: $UNAME ($ARCH)"
 echo " Testing compatibility for: Linux, FreeBSD, OpenBSD,"
 echo "                            NetBSD, macOS, Solaris/illumos"

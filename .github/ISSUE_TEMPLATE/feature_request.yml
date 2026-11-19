@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for helping improve the Ricoh Universal DDST Driver Suite!
+        Thank you for helping improve the Ricoh Universal DDST/GDI/LHPL Driver Suite!
 
   - type: dropdown
     id: request_type

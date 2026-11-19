@@ -878,7 +878,7 @@ HTML_LAYOUT = """
 
   <footer>
     <div>CUPS Server: <code class="mono">{{ host_name }}</code> &bull; Network URL: <code class="mono">http://{{ lan_ip }}:{{ port }}/</code></div>
-    <div>Ricoh Universal DDST Driver System</div>
+    <div>Ricoh Universal DDST/GDI/LHPL Driver System</div>
   </footer>
 
   <script>

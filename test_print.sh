@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Ricoh DDST Driver Suite - Test Print Script
+# Ricoh Universal Driver Suite (DDST & LHPL) - Test Print Script
 # Compatible with Linux, FreeBSD, OpenBSD, NetBSD, macOS, and Unix
 # ==============================================================================
 
@@ -26,15 +26,15 @@ echo "Sending single test print page to '$PRINTER_NAME'..."
 
 {
   echo "=================================================="
-  echo "      Ricoh Universal DDST Driver Test Page       "
+  echo "      Ricoh Universal Driver Test Page            "
   echo "=================================================="
   echo ""
   echo "  Timestamp : $(date)"
   echo "  Platform  : $(uname -s) ($(uname -m))"
   echo "  Printer   : $PRINTER_NAME"
-  echo "  Driver    : Native Universal DDST CUPS Filter"
+  echo "  Driver    : Native Universal CUPS Filter"
   echo ""
-  echo "  If you can read this, your Ricoh DDST driver"
+  echo "  If you can read this, your Ricoh driver"
   echo "  is functioning properly on your system."
   echo ""
   echo "=================================================="

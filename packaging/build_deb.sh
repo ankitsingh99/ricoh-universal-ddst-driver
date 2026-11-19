@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Ricoh Universal DDST Driver - Debian/Ubuntu (.deb) Package Generator
+# Ricoh Universal DDST/GDI/LHPL Driver - Debian/Ubuntu (.deb) Package Generator
 # ==============================================================================
 set -euo pipefail
 
@@ -82,10 +82,10 @@ Depends: libc6 (>= 2.14), libjbig0 (>= 2.0) | libjbig-dev, cups (>= 1.5.0) | cup
 Recommends: cups-filters | libcupsfilters1 | cups-daemon
 Suggests: system-config-printer
 Homepage: https://github.com/ankitsingh99/ricoh-universal-ddst-driver
-Description: Universal CUPS DDST/GDI printer driver for Ricoh Aficio SP Series
+Description: Universal CUPS DDST/GDI/LHPL printer driver for Ricoh Aficio SP Series
  High-performance CUPS raster filter and PPD driver suite supporting Ricoh
  SP 100, SP 110, SP 150, SP 200, SP 210, SP 230, and SP 310 series laser printers.
- Provides native raster conversion and JBIG stream compression.
+ Provides native DDST and LHPL raster conversion and JBIG stream compression.
 EOF
 
 # 6. Create postinst script
@@ -105,7 +105,7 @@ if [ "$1" = "configure" ]; then
     elif command -v service >/dev/null 2>&1; then
         service cups restart 2>/dev/null || true
     fi
-    echo "Ricoh Universal DDST CUPS driver installed successfully."
+    echo "Ricoh Universal DDST/GDI/LHPL CUPS driver installed successfully."
 fi
 
 exit 0

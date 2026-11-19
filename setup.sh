@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Ricoh Universal DDST/GDI CUPS Driver Suite - Universal Automated Installer
+# Ricoh Universal DDST/GDI/LHPL CUPS Driver Suite - Universal Automated Installer
 # Supports: Ricoh SP 100, SP 110, SP 111, SP 112, SP 150, SP 200, SP 210, SP 230, SP 310 Series
 # Platforms: Linux (Debian, Ubuntu, Fedora, RHEL, openSUSE, Arch, Alpine, Void, Gentoo),
 #            FreeBSD, OpenBSD, NetBSD, DragonFly BSD, macOS (Intel & Apple Silicon),
@@ -22,7 +22,7 @@ OS="$(uname -s)"
 ARCH="$(uname -m)"
 
 echo "========================================================"
-echo "  Ricoh Universal DDST/GDI Driver Suite Installer"
+echo "  Ricoh Universal DDST/GDI/LHPL Driver Suite Installer"
 echo "  Detected OS: $OS ($ARCH)"
 echo "========================================================"
 

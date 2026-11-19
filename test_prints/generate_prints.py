@@ -106,7 +106,7 @@ Model Name:          {m['name']}
 Protocol Family:     {m['protocol']}
 CUPS Raster Filter:  {m['filter']}
 Target PPD File:     {m['ppd']}
-Driver Suite:        Ricoh Universal DDST/GDI Driver Suite v0.1.0
+Driver Suite:        Ricoh Universal DDST/GDI/LHPL Driver Suite v0.1.0
 Hardware Features:   {m['features']}
 
 PAGE CONFIGURATION & SPECIFICATION

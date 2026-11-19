@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Ricoh DDST Driver Suite - Universal Uninstaller Script
+# Ricoh DDST/GDI/LHPL Driver Suite - Universal Uninstaller Script
 # Compatible with Linux, FreeBSD, OpenBSD, NetBSD, macOS, and Solaris/Unix
 # ==============================================================================
 
@@ -10,7 +10,7 @@ TARGET_PRINTER="${1:-Ricoh_SP_200_DDST}"
 OS="$(uname -s)"
 
 echo "========================================================"
-echo "  Ricoh Universal DDST/GDI Driver Suite Uninstaller"
+echo "  Ricoh Universal DDST/GDI/LHPL Driver Suite Uninstaller"
 echo "  Detected OS: $OS"
 echo "========================================================"
 
