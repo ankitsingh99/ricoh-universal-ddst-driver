@@ -86,6 +86,18 @@ int main(int argc, char* argv[])
             hdr.PageSize[1] = 842;
             hdr.cupsBitsPerPixel = 24;
             hdr.cupsColorSpace = CUPS_CSPACE_RGB;
+        } else if (strcmp(type, "imageable") == 0) {
+            /* macOS cgpdftoraster: bitmap covers only the 10pt-margin imageable area */
+            hdr.cupsWidth = 4792;
+            hdr.cupsHeight = 6850;
+            hdr.PageSize[0] = 595;
+            hdr.PageSize[1] = 842;
+            hdr.ImagingBoundingBox[0] = 10;
+            hdr.ImagingBoundingBox[1] = 10;
+            hdr.ImagingBoundingBox[2] = 585;
+            hdr.ImagingBoundingBox[3] = 832;
+            hdr.cupsBitsPerPixel = 1;
+            hdr.cupsColorSpace = CUPS_CSPACE_K;
         } else {
             /* Default mono */
             hdr.PageSize[0] = 595;
