@@ -1,0 +1,83 @@
+================================================================================
+RICOH LHPL PROTOCOL EMULATION & STREAM DISSECTION REPORT
+================================================================================
+File Name:            ricoh_sp150_test_print.prn
+File Size:            70,814 bytes
+SHA-256 Digest:       f7a66326acc96814fd0ded2877435e9be7d4eeb5d18412584c5db54480f58297
+Protocol Family:      Ricoh LHPL (SP 150 Series / Lenovo OEM Engine)
+Emulation Engine:     Universal LHPL Virtual ASIC v0.1.0
+Dissection Timestamp: 2026-11-19 20:00:01
+--------------------------------------------------------------------------------
+
+[STAGE 1] PJL HEADER DIRECTIVES
+--------------------------------------------------------------------------------
+  %-12345X@PJL JOB NAME=PRINTER
+  @PJL SET JOBATTR=HST:localhost
+  @PJL SET JOBATTR=USR:testuser
+  @PJL SET JOBATTR=DOC:Ricoh SP 150 / SP 150w / SP 150SU Test
+  @PJL SET JOBATTR=DATE:11/19/2026
+  @PJL SET JOBATTR=TIME:20:00:01
+  @PJL SET DUPLEX=OFF
+  @PJL SET MEDIASOURCE=0
+  @PJL SET MDPXS=0
+  @PJL SET BITSPERPIXEL=1
+  @PJL SET COPIES=1
+  @PJL SET RESOLUTION=600
+  @PJL SET RENDERMODE=GRAYSCALE
+  @PJL ENTER LANGUAGE=LHPL
+
+[STAGE 2] LHPL BINARY PACKET DISSECTION
+--------------------------------------------------------------------------------
+  Frame 1: @sj (Start Job Frame)
+    Offset:           0x0000019B
+    Frame Size:       64 bytes
+    Copies Config:    1
+    XOR Checksum:     Calc: 0x46 | Wire: 0x46 -> [MATCH - PASS]
+    Raw Frame Hex:    1b4c4840736a01000100000000000000...00000046
+
+  Frame 2: @sp (Start Page Frame)
+    Offset:           0x000001DB
+    Frame Size:       64 bytes
+    Engine Flags:     0x0102 (Little-Endian)
+    Raster Width:     5,120 pixels
+    Raster Height:    6,978 scanlines (including 128 top pad rows)
+    Uncompressed:     4,465,920 bytes
+    Compressed Size:  70,190 bytes
+    Resolution:       600 DPI
+    Page Dimensions:  210.0 mm x 297.0 mm (2100 x 2970 in 0.1mm units)
+    XOR Checksum:     Calc: 0x84 | Wire: 0x84 -> [MATCH - PASS]
+    Raw Header Hex:   1b4c48407370020100140000421b0000002544002e1201002e12010000000000
+
+  [STAGE 3] JBIG-KIT T.85 COMPRESSED BITMAP PAYLOAD
+    Payload Offset:   0x0000021B
+    Payload Length:   70,190 bytes
+    BIH Raw Hex:      000001000000140000001b420000008008000040
+    T.85 Profile:     Single-Progression Bi-level (D=0, P=1)
+    Stripe Height:    128 scanlines (L0)
+    ATMOV Offset:     MX=8, MY=0
+    Compression Ratio:63.63:1 (98.43% space savings)
+
+  Frame 3: @ep (End Page Frame)
+    Offset:           0x00011449
+    Frame Size:       64 bytes
+    XOR Checksum:     Calc: 0x4A | Wire: 0x4A -> [MATCH - PASS]
+
+[STAGE 4] PROTOCOL CONFORMANCE & ASIC VERIFICATION CHECKS
+--------------------------------------------------------------------------------
+  [PASS]   PJL UEL Prefix Present
+  [PASS]   PJL JOB NAME=PRINTER Present
+  [PASS]   ENTER LANGUAGE=LHPL Directive
+  [PASS]   @sj Frame Present and 64 Bytes
+  [PASS]   @sj Frame XOR Checksum Valid
+  [PASS]   @sp Frame Present and 64 Bytes
+  [PASS]   @sp Frame XOR Checksum Valid
+  [PASS]   Raster Dimensions 5120x6978 Conforming
+  [PASS]   JBIG T.85 Compressed Stream Valid
+  [PASS]   @ep Frame Present and 64 Bytes
+  [PASS]   @ep Frame XOR Checksum Valid
+  [PASS]   @PJL EOJ Trailer Present
+  [PASS]   Final UEL Exit Sequence Present
+
+================================================================================
+FINAL EMULATION VERDICT: PASSED - 100% PROTOCOL COMPLIANT (READY FOR SP 150 HARDWARE)
+================================================================================

@@ -1,0 +1,90 @@
+================================================================================
+RICOH DDST PROTOCOL EMULATION & STREAM DISSECTION REPORT
+================================================================================
+File Name:            ricoh_sp230_test_print.prn
+File Size:            66,255 bytes
+SHA-256 Digest:       5bed95858ee65234113b86e2cf4dfc8e0dc819585be0e2468bf415c47414d4a8
+Protocol Family:      Ricoh DDST v1 (Bi-level JBIG Stream Framing)
+Emulation Engine:     Universal DDST Virtual ASIC v0.1.0
+Dissection Timestamp: 2026-11-19 20:00:02
+--------------------------------------------------------------------------------
+
+[STAGE 1] STATE MACHINE EMULATION & PROTOCOL SEQUENCING
+--------------------------------------------------------------------------------
+  [0x00000000] [STATE: INIT]        UEL Prefix Detected: <ESC>%-12345X (VALID)
+  [0x00000000] [STATE: ESC_SEQ]     %-12345X@PJL
+  [0x0000000F] [STATE: PJL_CONFIG]  TIMESTAMP       = 2026/11/19 20:00:02
+  [0x00000037] [STATE: PJL_CONFIG]  FILENAME        = printjob
+  [0x00000053] [STATE: PJL_CONFIG]  COMPRESS        = JBIG
+  [0x0000006B] [STATE: PJL_CONFIG]  USERNAME        = lp
+  [0x00000081] [STATE: PJL_CONFIG]  COVER           = OFF
+  [0x00000095] [STATE: PJL_CONFIG]  HOLD            = OFF
+  [0x000000A8] [STATE: PJL_CONFIG]  PAGESTATUS      = START
+  [0x000000C3] [STATE: PJL_CONFIG]  COPIES          = 1
+  [0x000000D6] [STATE: PJL_CONFIG]  MEDIASOURCE     = TRAY1
+  [0x000000F2] [STATE: PJL_CONFIG]  MEDIATYPE       = PLAINRECYCLE
+  [0x00000113] [STATE: PJL_CONFIG]  DUPLEX          = OFF
+  [0x00000128] [STATE: PJL_CONFIG]  PAPER           = A4
+  [0x0000013B] [STATE: PJL_CONFIG]  PAPERWIDTH      = 4792
+  [0x00000155] [STATE: PJL_CONFIG]  PAPERLENGTH     = 6850
+  [0x00000170] [STATE: PJL_CONFIG]  RESOLUTION      = 600
+  [0x00000189] [STATE: PJL_CONFIG]  IMAGELEN        = 65764
+  [0x000001A2] [STATE: JBIG_STREAM] Payload Length: 65,764 bytes (offset 0x000001A2..0x00010286)
+  [0x00010286] [STATE: PJL_CONFIG]  DOTCOUNT        = 2649639
+  [0x000102A1] [STATE: PJL_CONFIG]  PAGESTATUS      = END
+  [0x000102BA] [STATE: JOB_END]     @PJL EOJ (End of Job Marker)
+  [0x000102C4] [STATE: ESC_SEQ]     %-12345X
+
+[STAGE 2] PJL PARAMETER TABLE & JOB SPECIFICATION
+--------------------------------------------------------------------------------
+  TIMESTAMP           : 2026/11/19 20:00:02
+  FILENAME            : printjob
+  COMPRESS            : JBIG
+  USERNAME            : lp
+  COVER               : OFF
+  HOLD                : OFF
+  PAGESTATUS          : END
+  COPIES              : 1
+  MEDIASOURCE         : TRAY1
+  MEDIATYPE           : PLAINRECYCLE
+  DUPLEX              : OFF
+  PAPER               : A4
+  PAPERWIDTH          : 4792
+  PAPERLENGTH         : 6850
+  RESOLUTION          : 600
+  IMAGELEN            : 65764
+  DOTCOUNT            : 2649639
+
+[STAGE 3] JBIG BIE (BI-LEVEL IMAGE ENTITY) PAYLOAD ANALYSIS
+--------------------------------------------------------------------------------
+  Payload Offset:     0x000001A2
+  Payload Size:       65,764 bytes
+  BIH Raw Hex:        00000100000012b800001ac20000008000000348
+  Resolution (XD x YD): 4792 x 6850 pixels
+  Bit Planes (P):     1 plane (1-bit monochrome)
+  Resolution Layers:  0 (single resolution layer)
+  Initial Layer (DL): 0
+  Stripe Height (L0): 128 scanlines per stripe
+  Order Flags:        0x03 (SMWRLD=True, HITOLO=False, TPBON=False)
+  Options Flags:      0x48 (TPOS=False)
+  Physical Page Size: 202.9 mm x 290.0 mm (7.99" x 11.42")
+  Total Page Pixels:  32,825,200 dots
+  Reported Dot Count: 2,649,639 dots
+  Estimated Coverage: 8.072% toner coverage
+
+[STAGE 4] PROTOCOL CONFORMANCE & ASIC VERIFICATION CHECKS
+--------------------------------------------------------------------------------
+  [PASS]   Universal Exit Language (UEL) Prefix
+  [PASS]   COMPRESS=JBIG Specification
+  [PASS]   PAGESTATUS=START Assertion
+  [PASS]   PAPER Specification Valid
+  [PASS]   RESOLUTION Matches 600 DPI
+  [PASS]   IMAGELEN Matches Wire Payload
+  [PASS]   DOTCOUNT Parameter Present
+  [PASS]   PAGESTATUS=END Eject Assertion
+  [PASS]   Job Terminator (@PJL EOJ)
+  [PASS]   UEL Stream Termination
+
+================================================================================
+FINAL EMULATION VERDICT: PASSED - 100% PROTOCOL COMPLIANT (READY FOR PRINTER HARDWARE)
+================================================================================

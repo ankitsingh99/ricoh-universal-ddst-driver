@@ -20,7 +20,7 @@ CPPFLAGS      += -I/usr/local/include -I/usr/pkg/include -I/opt/homebrew/include
 LDFLAGS       += -L/usr/local/lib -L/usr/pkg/lib -L/opt/homebrew/lib
 LIBS          ?= -lcups -lcupsimage -ljbig
 
-.PHONY: all build install uninstall register detect test test-coverage test-network test-os enable-sharing disable-sharing status-sharing clean help package package-deb package-pkg package-tar dist
+.PHONY: all build install uninstall register detect test test-coverage test-network test-os test-prints enable-sharing disable-sharing status-sharing clean help package package-deb package-pkg package-tar dist
 
 all: build
 
@@ -38,6 +38,7 @@ help:
 	@echo "make test-coverage   - Run comprehensive unit & integration test suite with gcov"
 	@echo "make test-network    - Run mobile & network printing integration tests"
 	@echo "make test-os         - Run full cross-platform Multi-OS compatibility test suite"
+	@echo "make test-prints     - Generate wire captures (.prn) and emulation logs for all models"
 	@echo "sudo make uninstall  - Remove printer queue and driver files"
 	@echo "make package         - Build OS-specific install package & distribution archives"
 	@echo "make package-deb     - Build Debian/Ubuntu .deb package"
@@ -177,6 +178,10 @@ test-network:
 test-os:
 	@chmod +x tests/test_os_compatibility.sh
 	./tests/test_os_compatibility.sh
+
+test-prints:
+	@chmod +x test_prints/generate_all.sh
+	./test_prints/generate_all.sh
 
 enable-sharing:
 	@chmod +x enable_network_printing.sh

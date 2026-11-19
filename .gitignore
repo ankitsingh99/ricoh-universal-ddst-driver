@@ -1,6 +1,7 @@
 # Binaries and object files
 rastertoricohddst
 rastertoricohjbig
+rastertoricohlhpl
 /*_cov
 *.dSYM/
 *.o
@@ -31,6 +32,10 @@ SHA256SUMS*
 *.gcno
 *.gcov
 test_outputs/
+
+# Allow test prints and emulation logs
+!test_prints/**
+!test_print/**
 
 # Python artifacts
 __pycache__/
