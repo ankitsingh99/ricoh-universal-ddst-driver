@@ -31,12 +31,18 @@ Consumer and SMB Ricoh DDST/GDI printers lack official Linux and BSD/macOS drive
 |---|---|---|---|---|
 | **Ricoh SP 100 Series** | SP 100, SP 100e, SP 100SU, SP 100SF | [`ppd/ricoh-sp100.ppd`](ppd/ricoh-sp100.ppd) | 600 DPI | Manual |
 | **Ricoh SP 110 Series** | SP 110, SP 111, SP 112 (incl. SU/SF) | [`ppd/ricoh-sp111.ppd`](ppd/ricoh-sp111.ppd) | 1200x600 DPI | Manual |
-| **Ricoh SP 150 Series** | SP 150, SP 150w, SP 150SU, SP 150SUw | [`ppd/ricoh-sp150.ppd`](ppd/ricoh-sp150.ppd) | 1200x600 DPI | Manual |
+| **Ricoh SP 150 Series** | SP 150, SP 150w, SP 150SU, SP 150SUw | *See Note below (LHPL protocol)* | 1200x600 DPI | Manual |
 | **Ricoh SP 200 Series** | SP 200, SP 201N/NW, SP 202, SP 203, SP 204S/SF | [`ppd/ricoh-sp200.ppd`](ppd/ricoh-sp200.ppd) | 1200x600 DPI | Manual |
 | **Ricoh SP 210 Series** | SP 210, SP 211, SP 212, SP 213, SP 220 | [`ppd/ricoh-sp210.ppd`](ppd/ricoh-sp210.ppd) | 1200x600 DPI | Manual |
 | **Ricoh SP 230 Series** | SP 230DNw, SP 230SFNw | [`ppd/ricoh-sp230.ppd`](ppd/ricoh-sp230.ppd) | 1200x600 DPI | Auto Duplex |
 | **Ricoh SP 310 / 325 / 3710** | SP 310DN, SP 311DN/SFN, SP 325, SP 3710 | [`ppd/ricoh-sp310.ppd`](ppd/ricoh-sp310.ppd) | 1200x600 DPI | Auto Duplex + Multi-Tray |
 | **OEM Clones** | Equivalent Gestetner, Lanier, Savin, Nashuatec models | Matching PPD | Match Base | Match Base |
+
+> [!NOTE]
+> **Ricoh SP 150 Series Protocol Difference**:
+> Unlike the SP 100, SP 110, SP 200, SP 210, and SP 310 series which use Ricoh's standard DDST bi-level stream framing (`@PJL SET COMPRESS=JBIG`, `@PJL SET IMAGELEN`, `@PJL SET DOTCOUNT`), the **SP 150 series** uses a distinct proprietary raster protocol (**LHPL**, switching via `@PJL ENTER LANGUAGE=LHPL` with fixed 64-byte binary command headers `@sj`/`@sp`/`@ep`).
+> - **On macOS Ventura / Sonoma / Sequoia**: If using official Ricoh drivers, a known CUPS `.app` filter suffix bug in `/Library/Printers/PPDs` or `/etc/cups/ppd/` causes jobs to silently drop. Renaming the filter from `RICOH_SP_150Filter.app` to `RICOH_SP_150Filter` and updating the PPD fixes the official driver immediately (see issue #1 for details).
+> - Native open-source LHPL protocol framing for SP 150 is being tracked in [#1](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/issues/1).
 
 ---
 
