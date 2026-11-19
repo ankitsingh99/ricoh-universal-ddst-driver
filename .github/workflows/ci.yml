@@ -43,7 +43,7 @@ jobs:
 
       - name: Validate all PPD files with cupstestppd
         run: |
-          cupstestppd -W filters ppd/*.ppd ricoh-sp200.ppd
+          cupstestppd -W filters ppd/*.ppd
 
       - name: Check Shell Scripts Syntax
         run: |

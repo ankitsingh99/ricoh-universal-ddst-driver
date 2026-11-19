@@ -64,7 +64,6 @@ install -m 755 "${SCRIPT_DIR}/rastertoricohlhpl" "${BUILD_ROOT}/usr/lib/cups/fil
 
 # 3. Copy PPD files
 install -m 644 "${SCRIPT_DIR}"/ppd/*.ppd "${BUILD_ROOT}/usr/share/ppd/cupsfilters/"
-install -m 644 "${SCRIPT_DIR}/ricoh-sp200.ppd" "${BUILD_ROOT}/usr/share/ppd/cupsfilters/"
 
 # 4. Copy docs and license
 install -m 644 "${SCRIPT_DIR}/README.md" "${BUILD_ROOT}/usr/share/doc/${PACKAGE_NAME}/"

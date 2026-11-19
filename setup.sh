@@ -269,7 +269,7 @@ run_root install -m 755 rastertoricohjbig "$FILTER_DIR/rastertoricohjbig"
 run_root install -m 755 rastertoricohlhpl "$FILTER_DIR/rastertoricohlhpl"
 
 if [ "$OS" = "Darwin" ]; then
-    for ppd in "$SCRIPT_DIR"/ppd/*.ppd "$SCRIPT_DIR"/ricoh-sp200.ppd; do
+    for ppd in "$SCRIPT_DIR"/ppd/*.ppd; do
         if [ -f "$ppd" ]; then
             target="$PPD_DIR/$(basename "$ppd")"
             sed "s|application/vnd.cups-raster 0 rastertoricohddst|application/vnd.cups-raster 0 $FILTER_DIR/rastertoricohddst|g; s|application/vnd.cups-raster 0 rastertoricohjbig|application/vnd.cups-raster 0 $FILTER_DIR/rastertoricohjbig|g; s|application/vnd.cups-raster 0 rastertoricohlhpl|application/vnd.cups-raster 0 $FILTER_DIR/rastertoricohlhpl|g" "$ppd" | run_root tee "$target" >/dev/null
@@ -280,7 +280,7 @@ if [ "$OS" = "Darwin" ]; then
     run_root chown root:wheel "$PPD_DIR"/ricoh-sp*.ppd 2>/dev/null || true
     run_root xattr -d com.apple.quarantine "$FILTER_DIR/rastertoricohddst" "$FILTER_DIR/rastertoricohjbig" "$FILTER_DIR/rastertoricohlhpl" 2>/dev/null || true
 else
-    for ppd in "$SCRIPT_DIR"/ppd/*.ppd "$SCRIPT_DIR"/ricoh-sp200.ppd; do
+    for ppd in "$SCRIPT_DIR"/ppd/*.ppd; do
         if [ -f "$ppd" ]; then
             run_root install -m 644 "$ppd" "$PPD_DIR/"
         fi

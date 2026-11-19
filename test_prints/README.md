@@ -15,7 +15,7 @@ This directory contains pre-generated wire-level raw print captures (`.prn`) and
 | **Ricoh SP 210 / SP 211** | DDST v1 | `rastertoricohddst` | `ppd/ricoh-sp210.ppd` | [`ricoh_sp210_test_print.prn`](ricoh_sp210_test_print.prn) | [`ricoh_sp210_emulation.log`](ricoh_sp210_emulation.log) | **PASS** |
 | **Ricoh SP 230DNw / SFn** | DDST v1 (Duplex) | `rastertoricohddst` | `ppd/ricoh-sp230.ppd` | [`ricoh_sp230_test_print.prn`](ricoh_sp230_test_print.prn) | [`ricoh_sp230_emulation.log`](ricoh_sp230_emulation.log) | **PASS** |
 | **Ricoh SP 310DN / SP 311** | DDST v1 (Multi-Tray) | `rastertoricohddst` | `ppd/ricoh-sp310.ppd` | [`ricoh_sp310_test_print.prn`](ricoh_sp310_test_print.prn) | [`ricoh_sp310_emulation.log`](ricoh_sp310_emulation.log) | **PASS** |
-| **Ricoh SP 200 (Legacy JBIG)** | DDST v1 | `rastertoricohjbig` | `ppd/ricoh-sp200.ppd` | [`ricoh_sp200_legacy_test_print.prn`](ricoh_sp200_legacy_test_print.prn) | [`ricoh_sp200_legacy_emulation.log`](ricoh_sp200_legacy_emulation.log) | **PASS** |
+| **Ricoh SP 200 (Legacy JBIG)** | DDST v1 | `rastertoricohjbig` | `ppd/ricoh-sp200-legacy.ppd` | [`ricoh_sp200_legacy_test_print.prn`](ricoh_sp200_legacy_test_print.prn) | [`ricoh_sp200_legacy_emulation.log`](ricoh_sp200_legacy_emulation.log) | **PASS** |
 
 ---
 
