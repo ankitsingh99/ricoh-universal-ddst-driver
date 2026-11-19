@@ -48,7 +48,7 @@ flowchart TD
     subgraph Backend["I/O Backend & Hardware Tier"]
         USBBackend["CUPS USB Backend\n(/usr/libexec/cups/backend/usb)"]
         IOKit["macOS IOKit / Linux usblp & libusb"]
-        Printer["Physical Ricoh Laser Printer\n(SP 100/110/150/200/210/230/310)"]
+        Printer["Physical Ricoh Laser Printer\n(SP 100/110/200/210/230/310)"]
     end
 
     iOS -->|mDNS Query| mDNS
@@ -282,7 +282,6 @@ lpadmin -p <QueueName> -o printer-is-shared=true -o printer-error-policy=retry-c
 |---|---|---|---|---|---|
 | **SP 100** | SP 100, 100e, 100SU, 100SF | 600 DPI | Manual | Tray 1 | `ppd/ricoh-sp100.ppd` |
 | **SP 110** | SP 110, 111, 112, SU, SF | 1200x600 DPI | Manual | Tray 1, Manual | `ppd/ricoh-sp111.ppd` |
-| **SP 150** | SP 150, 150w, 150SU, 150SUw | 1200x600 DPI | Manual | Tray 1 | `ppd/ricoh-sp150.ppd` |
 | **SP 200** | SP 200, 201N/NW, 202, 203, 204 | 1200x600 DPI | Manual | Tray 1, Manual | `ppd/ricoh-sp200.ppd` |
 | **SP 210** | SP 210, 211, 212, 213, 220 | 1200x600 DPI | Manual | Tray 1, Manual | `ppd/ricoh-sp210.ppd` |
 | **SP 230** | SP 230DNw, 230SFNw | 1200x600 DPI | Auto Duplex | Tray 1, Manual | `ppd/ricoh-sp230.ppd` |

@@ -41,7 +41,7 @@ run_root() {
 # 1. Remove CUPS Printer Queues
 echo "[1/3] Removing CUPS printer queue(s)..."
 for q in "$TARGET_PRINTER" \
-         Ricoh_SP_100_DDST Ricoh_SP_111_DDST Ricoh_SP_150_DDST \
+         Ricoh_SP_100_DDST Ricoh_SP_111_DDST \
          Ricoh_SP_200_DDST Ricoh_SP_210_DDST Ricoh_SP_230_DDST \
          Ricoh_SP_310_DDST; do
     if lpstat -p "$q" >/dev/null 2>&1; then

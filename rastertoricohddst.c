@@ -2,7 +2,7 @@
  * rastertoricohddst.c — Universal CUPS raster filter for Ricoh DDST laser printers
  *
  * Supports:
- *   - Ricoh SP 100 / SP 110 / SP 111 / SP 112 / SP 150 series
+ *   - Ricoh SP 100 / SP 110 / SP 111 / SP 112 series
  *   - Ricoh SP 200 / SP 201 / SP 202 / SP 203 / SP 204 series
  *   - Ricoh SP 210 / SP 211 / SP 212 / SP 213 / SP 220 / SP 230 series
  *   - Ricoh SP 310 / SP 311 / SP 320 / SP 325 / SP 330 / SP 3710 series

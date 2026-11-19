@@ -260,7 +260,7 @@ echo "[7/8] Validating PPD Profiles with cupstestppd..."
 if command -v cupstestppd >/dev/null 2>&1; then
     cupstestppd -W filters ppd/*.ppd ricoh-sp200.ppd > "${TMP_DIR}/ppd_test.log"
     grep -q "PASS" "${TMP_DIR}/ppd_test.log" || { echo "FAIL: PPD syntax verification failed"; exit 1; }
-    echo "  [PASS] All 8 PPD profiles conform to Adobe PPD 4.3 specification."
+    echo "  [PASS] All 7 PPD profiles conform to Adobe PPD 4.3 specification."
 else
     echo "  [*] cupstestppd not found; skipping PPD validation."
 fi

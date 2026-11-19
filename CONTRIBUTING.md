@@ -7,7 +7,7 @@ Thank you for your interest in improving the Ricoh Universal DDST CUPS Driver Su
 > [!IMPORTANT]
 > **Hardware Testing & Model Support Status**
 > - **Tested Hardware**: The codebase and USB print streams are physically tested and verified on the **Ricoh SP 200** printer.
-> - **Extrapolated Support**: Support for other models (such as SP 100, SP 110/111/112, SP 150, SP 210, SP 230, and SP 310 series) has been **extrapolated** from DDST protocol specifications and reverse-engineered packet captures, but has **not yet been physically tested on those models** by the maintainer.
+> - **Extrapolated Support**: Support for other models (such as SP 100, SP 110/111/112, SP 210, SP 230, and SP 310 series) has been **extrapolated** from DDST protocol specifications and reverse-engineered packet captures, but has **not yet been physically tested on those models** by the maintainer.
 > - **Open a Discussion for Issues & Compatibility**: If you encounter errors, unexpected behavior, or want to report successful testing on other models, please [**Open a Discussion on GitHub**](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/discussions).
 > - **Contributions Welcome**: Community contributions (testing feedback, bug fixes, USB captures, and documentation) are warmly welcomed!
 
@@ -28,12 +28,12 @@ Please note that this project is released with a [Contributor Code of Conduct](C
 Before submitting an issue, please check existing issues and [Discussions](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/discussions) to avoid duplicates. When opening a discussion or issue, provide:
 - Your Operating System and architecture (`uname -a`).
 - CUPS version (`cups-config --version` or `cupsd --version`).
-- Printer model (e.g., Ricoh SP 100, SP 111, SP 150, SP 200, SP 210, SP 230, SP 310, etc.).
+- Printer model (e.g., Ricoh SP 100, SP 111, SP 200, SP 210, SP 230, SP 310, etc.).
 - Connection type (USB or Network).
 - Relevant CUPS log output from `/var/log/cups/error_log` (or `cupsctl --debug-logging` enabled logs).
 
 ### 2. Testing Other Printer Models
-If you own any Ricoh DDST printer (such as Ricoh SP 100, SP 111, SP 150, SP 210, SP 212, SP 220, SP 230, SP 310, SP 325, SP 3710), test the driver and let us know your results in GitHub Discussions!
+If you own any Ricoh DDST printer (such as Ricoh SP 100, SP 111, SP 210, SP 212, SP 220, SP 230, SP 310, SP 325, SP 3710), test the driver and let us know your results in GitHub Discussions!
 - If the printer works or needs tweaks, open a Discussion or PR to update the compatibility matrix.
 - If you have USB packet captures from the Windows driver, see [Capturing USB Traffic](#capturing-usb-traffic) below.
 

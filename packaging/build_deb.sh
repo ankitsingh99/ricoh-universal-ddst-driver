@@ -83,7 +83,7 @@ Suggests: system-config-printer
 Homepage: https://github.com/ankitsingh99/ricoh-universal-ddst-driver
 Description: Universal CUPS DDST/GDI printer driver for Ricoh Aficio SP Series
  High-performance CUPS raster filter and PPD driver suite supporting Ricoh
- SP 100, SP 110, SP 150, SP 200, SP 210, SP 230, and SP 310 series laser printers.
+ SP 100, SP 110, SP 200, SP 210, SP 230, and SP 310 series laser printers.
  Provides native raster conversion and JBIG stream compression.
 EOF
 

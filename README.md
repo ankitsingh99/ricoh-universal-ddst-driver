@@ -16,7 +16,7 @@ Consumer and SMB Ricoh DDST/GDI printers lack official Linux and BSD/macOS drive
 > [!IMPORTANT]
 > **Hardware Testing & Model Support Status**
 > - **Tested Hardware**: This driver has been physically tested and verified with the **Ricoh SP 200** printer.
-> - **Extrapolated Models**: Support for other models (SP 100, SP 110/111/112, SP 150, SP 210, SP 230, and SP 310 series) has been **extrapolated** from DDST protocol specifications and reverse-engineered packet captures, but has **not yet been physically tested on those individual models** by the maintainer.
+> - **Extrapolated Models**: Support for other models (SP 100, SP 110/111/112, SP 210, SP 230, and SP 310 series) has been **extrapolated** from DDST protocol specifications and reverse-engineered packet captures, but has **not yet been physically tested on those individual models** by the maintainer.
 > - **Community Testing & Discussions**: If you use this driver with other Ricoh models and encounter any issues or errors, please [**Open a Discussion on GitHub**](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/discussions) or submit an issue so we can help and refine compatibility.
 > - **Contributions**: Community contributions (hardware verification reports, USB packet captures, and pull requests) are warmly welcomed!
 
@@ -31,18 +31,11 @@ Consumer and SMB Ricoh DDST/GDI printers lack official Linux and BSD/macOS drive
 |---|---|---|---|---|
 | **Ricoh SP 100 Series** | SP 100, SP 100e, SP 100SU, SP 100SF | [`ppd/ricoh-sp100.ppd`](ppd/ricoh-sp100.ppd) | 600 DPI | Manual |
 | **Ricoh SP 110 Series** | SP 110, SP 111, SP 112 (incl. SU/SF) | [`ppd/ricoh-sp111.ppd`](ppd/ricoh-sp111.ppd) | 1200x600 DPI | Manual |
-| **Ricoh SP 150 Series** | SP 150, SP 150w, SP 150SU, SP 150SUw | *See Note below (LHPL protocol)* | 1200x600 DPI | Manual |
 | **Ricoh SP 200 Series** | SP 200, SP 201N/NW, SP 202, SP 203, SP 204S/SF | [`ppd/ricoh-sp200.ppd`](ppd/ricoh-sp200.ppd) | 1200x600 DPI | Manual |
 | **Ricoh SP 210 Series** | SP 210, SP 211, SP 212, SP 213, SP 220 | [`ppd/ricoh-sp210.ppd`](ppd/ricoh-sp210.ppd) | 1200x600 DPI | Manual |
 | **Ricoh SP 230 Series** | SP 230DNw, SP 230SFNw | [`ppd/ricoh-sp230.ppd`](ppd/ricoh-sp230.ppd) | 1200x600 DPI | Auto Duplex |
 | **Ricoh SP 310 / 325 / 3710** | SP 310DN, SP 311DN/SFN, SP 325, SP 3710 | [`ppd/ricoh-sp310.ppd`](ppd/ricoh-sp310.ppd) | 1200x600 DPI | Auto Duplex + Multi-Tray |
 | **OEM Clones** | Equivalent Gestetner, Lanier, Savin, Nashuatec models | Matching PPD | Match Base | Match Base |
-
-> [!NOTE]
-> **Ricoh SP 150 Series Protocol Difference**:
-> Unlike the SP 100, SP 110, SP 200, SP 210, and SP 310 series which use Ricoh's standard DDST bi-level stream framing (`@PJL SET COMPRESS=JBIG`, `@PJL SET IMAGELEN`, `@PJL SET DOTCOUNT`), the **SP 150 series** uses a distinct proprietary raster protocol (**LHPL**, switching via `@PJL ENTER LANGUAGE=LHPL` with fixed 64-byte binary command headers `@sj`/`@sp`/`@ep`).
-> - **On macOS Ventura / Sonoma / Sequoia**: If using official Ricoh drivers, a known CUPS `.app` filter suffix bug in `/Library/Printers/PPDs` or `/etc/cups/ppd/` causes jobs to silently drop. Renaming the filter from `RICOH_SP_150Filter.app` to `RICOH_SP_150Filter` and updating the PPD fixes the official driver immediately (see issue #1 for details).
-> - Native open-source LHPL protocol framing for SP 150 is being tracked in [#1](https://github.com/ankitsingh99/ricoh-universal-ddst-driver/issues/1).
 
 ---
 
@@ -128,7 +121,6 @@ sudo make install
 |---|---|---|---|
 | **SP 100 / SP 100SU / SP 100SF** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp100.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp100.ppd` | `/usr/local/share/cups/model/ricoh-sp100.ppd` |
 | **SP 110 / SP 111 / SP 112** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp111.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp111.ppd` | `/usr/local/share/cups/model/ricoh-sp111.ppd` |
-| **SP 150 / SP 150w / SP 150SU** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp150.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp150.ppd` | `/usr/local/share/cups/model/ricoh-sp150.ppd` |
 | **SP 200 / SP 201 / SP 204** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp200.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp200.ppd` | `/usr/local/share/cups/model/ricoh-sp200.ppd` |
 | **SP 210 / SP 212 / SP 213 / SP 220** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp210.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp210.ppd` | `/usr/local/share/cups/model/ricoh-sp210.ppd` |
 | **SP 230DNw / SP 230SFNw** | `/Library/Printers/PPDs/Contents/Resources/ricoh-sp230.ppd` | `/usr/share/ppd/cupsfilters/ricoh-sp230.ppd` | `/usr/local/share/cups/model/ricoh-sp230.ppd` |
@@ -310,7 +302,7 @@ For the complete in-depth engineering specification, protocol breakdown, and seq
 | [`rastertoricohddst.c`](rastertoricohddst.c) | Native universal C source code for Ricoh DDST filter |
 | [`rastertoricohjbig.c`](rastertoricohjbig.c) | Legacy SP 200 filter (maintained for backward compatibility) |
 | [`enable_network_printing.sh`](enable_network_printing.sh) | AirPrint & IPP network printing configuration utility |
-| [`ppd/`](ppd/) | Adobe-compliant PPD library covering SP 100, 110, 150, 200, 210, 230, 310 series |
+| [`ppd/`](ppd/) | Adobe-compliant PPD library covering SP 100, 110, 200, 210, 230, 310 series |
 | [`tests/`](tests/) | Unit, coverage, and network integration test suite |
 | [`packaging/`](packaging/) | Packaging automation scripts (`.deb`, `.pkg`, `.tar.gz`) |
 | [`setup.sh`](setup.sh) | Automated multi-model installer script |

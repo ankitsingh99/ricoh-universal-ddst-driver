@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Ricoh Universal DDST/GDI CUPS Driver Suite - Universal Automated Installer
-# Supports: Ricoh SP 100, SP 110, SP 111, SP 112, SP 150, SP 200, SP 210, SP 230, SP 310 Series
+# Supports: Ricoh SP 100, SP 110, SP 111, SP 112, SP 200, SP 210, SP 230, SP 310 Series
 # Platforms: Linux (Debian, Ubuntu, Fedora, RHEL, openSUSE, Arch, Alpine, Void, Gentoo),
 #            FreeBSD, OpenBSD, NetBSD, DragonFly BSD, macOS (Intel & Apple Silicon),
 #            Solaris / illumos (OpenIndiana, OmniOS), and POSIX/Unix environments.
@@ -338,8 +338,6 @@ if [ -n "$DEVICE_URI" ]; then
         SELECTED_PPD="$PPD_DIR/ricoh-sp100.ppd"; PRINTER_NAME="Ricoh_SP_100_DDST"
     elif echo "$DEVICE_URI" | grep -qi "SP%20111\|SP111\|SP112"; then
         SELECTED_PPD="$PPD_DIR/ricoh-sp111.ppd"; PRINTER_NAME="Ricoh_SP_111_DDST"
-    elif echo "$DEVICE_URI" | grep -qi "SP%20150\|SP150"; then
-        SELECTED_PPD="$PPD_DIR/ricoh-sp150.ppd"; PRINTER_NAME="Ricoh_SP_150_DDST"
     elif echo "$DEVICE_URI" | grep -qi "SP%20210\|SP210\|SP211\|SP212"; then
         SELECTED_PPD="$PPD_DIR/ricoh-sp210.ppd"; PRINTER_NAME="Ricoh_SP_210_DDST"
     elif echo "$DEVICE_URI" | grep -qi "SP%20230\|SP230"; then
