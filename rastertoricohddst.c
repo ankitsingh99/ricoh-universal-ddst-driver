@@ -219,8 +219,35 @@ STATIC void write_page(unsigned char* bmp, unsigned w, unsigned h,
     free(buf.data);
 }
 
+/*
+ * Map the CUPS page size (in points) to the DDST PAPER name.
+ * Sizes are matched in portrait orientation with a few points of tolerance.
+ * Unknown sizes fall back to the original width/length heuristic.
+ *
+ * NOTE: A5/A6/JISB5/EXECUTIVE use Ricoh's usual PJL paper names and have not
+ * yet been confirmed on DDST hardware.
+ */
 STATIC const char* map_paper_name(unsigned width_pt, unsigned length_pt)
 {
+    static const struct { unsigned w, l; const char* name; } sizes[] = {
+        { 595,  842, "A4"        },
+        { 612,  792, "LETTER"    },
+        { 612, 1008, "LEGAL"     },
+        { 420,  595, "A5"        },
+        { 298,  420, "A6"        },
+        { 516,  729, "JISB5"     },
+        { 522,  756, "EXECUTIVE" },
+    };
+    unsigned w = width_pt < length_pt ? width_pt : length_pt;
+    unsigned l = width_pt < length_pt ? length_pt : width_pt;
+
+    for (size_t i = 0; i < sizeof(sizes) / sizeof(sizes[0]); i++) {
+        if (w + 3 >= sizes[i].w && w <= sizes[i].w + 3 &&
+            l + 3 >= sizes[i].l && l <= sizes[i].l + 3) {
+            return sizes[i].name;
+        }
+    }
+
     if (length_pt > 900) return "LEGAL";
     if (width_pt > 600)  return "LETTER";
     return "A4";
