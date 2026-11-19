@@ -64,17 +64,20 @@ typedef struct {
     unsigned char* data;
     size_t         size;
     size_t         cap;
+    int            failed; /* set once an allocation fails; further data is dropped */
 } Buf;
 
 STATIC void jbig_buf_cb(unsigned char* d, size_t n, void* arg)
 {
     Buf* b = (Buf*)arg;
+    if (b->failed) return;
     if (b->size + n > b->cap) {
         size_t new_cap = (b->size + n) * 2;
         if (new_cap < 65536) new_cap = 65536;
         unsigned char* new_data = (unsigned char*)REALLOC(b->data, new_cap);
         if (!new_data) {
             fprintf(stderr, "ERROR: rastertoricohlhpl: Out of memory expanding buffer\n");
+            b->failed = 1;
             return;
         }
         b->data = new_data;
@@ -365,7 +368,7 @@ int main(int argc, char* argv[])
         free(row_in);
 
         /* Encode page using JBIG T.85 */
-        Buf jbig_buf = { NULL, 0, 0 };
+        Buf jbig_buf = { NULL, 0, 0, 0 };
         struct jbg85_enc_state jbig_state;
         jbg85_enc_init(&jbig_state, out_w, total_h, jbig_buf_cb, &jbig_buf);
         jbg85_enc_options(&jbig_state, JBG_LRLTWO, LHPL_STRIPE_HEIGHT, 8);
@@ -396,6 +399,14 @@ int main(int argc, char* argv[])
         free(prev2_line);
         free(cur_line);
         free(page_buf);
+
+        if (jbig_buf.failed) {
+            fprintf(stderr, "ERROR: rastertoricohlhpl: Aborting job, page %d could not be encoded\n", page + 1);
+            free(jbig_buf.data);
+            cupsRasterClose(ras);
+            if (fd != 0) close(fd);
+            return 1;
+        }
 
         /* Write LHPL @sp (Start Page) frame and JBIG stream */
         write_lhpl_sp(out_w, total_h, dpi, jbig_buf.data, jbig_buf.size);
