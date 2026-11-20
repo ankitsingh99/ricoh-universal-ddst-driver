@@ -52,6 +52,14 @@ int main(int argc, char* argv[])
     assert(strcmp(map_paper_name(612, 1008), "LEGAL") == 0);
     assert(strcmp(map_paper_name(612, 792), "LETTER") == 0);
     assert(strcmp(map_paper_name(595, 842), "A4") == 0);
+    assert(strcmp(map_paper_name(420, 595), "A5") == 0);
+    assert(strcmp(map_paper_name(298, 420), "A6") == 0);
+    assert(strcmp(map_paper_name(516, 729), "JISB5") == 0);
+    assert(strcmp(map_paper_name(522, 756), "EXECUTIVE") == 0);
+    assert(strcmp(map_paper_name(842, 595), "A4") == 0);      /* landscape */
+    assert(strcmp(map_paper_name(596, 841), "A4") == 0);      /* rounding tolerance */
+    assert(strcmp(map_paper_name(612, 936), "LEGAL") == 0);   /* unknown: old heuristic */
+    assert(strcmp(map_paper_name(360, 504), "A4") == 0);      /* unknown: old heuristic */
 
     /* Test 3: count_dots */
     unsigned char all_zeros[16] = {0};
