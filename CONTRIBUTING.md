@@ -47,7 +47,7 @@ If you own any Ricoh DDST or LHPL printer (such as Ricoh SP 100, SP 111, SP 150,
 4. **Test your changes**:
    - Verify PPD syntax:
      ```bash
-     for f in ppd/*.ppd ricoh-sp200.ppd; do cupstestppd "$f"; done
+     for f in ppd/*.ppd; do cupstestppd "$f"; done
      ```
    - Compile filter cleanly with warnings enabled:
      ```bash

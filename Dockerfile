@@ -45,7 +45,6 @@ RUN chmod 755 /usr/lib/cups/filter/rastertoricohddst /usr/lib/cups/filter/raster
 
 # Install PPD Profiles
 COPY ppd/*.ppd /usr/share/ppd/cupsfilters/
-COPY ricoh-sp200.ppd /usr/share/ppd/cupsfilters/
 RUN chmod 644 /usr/share/ppd/cupsfilters/ricoh-sp*.ppd
 
 # Configure CUPS for network access

@@ -87,7 +87,7 @@ MODELS = [
     {
         "id": "ricoh_sp200_legacy",
         "name": "Ricoh Aficio SP 200 (Legacy JBIG Filter)",
-        "ppd": "ppd/ricoh-sp200.ppd",
+        "ppd": "ppd/ricoh-sp200-legacy.ppd",
         "filter": "rastertoricohjbig",
         "protocol": "DDST v1 (Legacy Filter)",
         "features": "Backward compatibility validation for rastertoricohjbig binary",

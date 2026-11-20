@@ -96,7 +96,7 @@ install: build
 	install -m 755 $(LEGACY_FILTER) "$(DESTDIR)$$FDIR/$(LEGACY_FILTER)"; \
 	install -m 755 $(LHPL_FILTER) "$(DESTDIR)$$FDIR/$(LHPL_FILTER)"; \
 	if [ "$$OS" = "Darwin" ]; then \
-		for ppd in $(PPD_DIR_SRC)/*.ppd ricoh-sp200.ppd; do \
+		for ppd in $(PPD_DIR_SRC)/*.ppd; do \
 			if [ -f "$$ppd" ]; then \
 				target="$(DESTDIR)$$PDIR/$$(basename "$$ppd")"; \
 				sed "s|application/vnd.cups-raster 0 rastertoricohddst|application/vnd.cups-raster 0 $$FDIR/rastertoricohddst|g; s|application/vnd.cups-raster 0 rastertoricohjbig|application/vnd.cups-raster 0 $$FDIR/rastertoricohjbig|g; s|application/vnd.cups-raster 0 rastertoricohlhpl|application/vnd.cups-raster 0 $$FDIR/rastertoricohlhpl|g" "$$ppd" > "$$target"; \
@@ -106,7 +106,7 @@ install: build
 		chown -R root:wheel /Library/Printers/Ricoh "$(DESTDIR)$$PDIR"/ricoh-sp*.ppd 2>/dev/null || true; \
 		xattr -d com.apple.quarantine "$(DESTDIR)$$FDIR/$(FILTER)" "$(DESTDIR)$$FDIR/$(LEGACY_FILTER)" "$(DESTDIR)$$FDIR/$(LHPL_FILTER)" 2>/dev/null || true; \
 	else \
-		for ppd in $(PPD_DIR_SRC)/*.ppd ricoh-sp200.ppd; do \
+		for ppd in $(PPD_DIR_SRC)/*.ppd; do \
 			if [ -f "$$ppd" ]; then \
 				install -m 644 "$$ppd" "$(DESTDIR)$$PDIR/"; \
 			fi; \
@@ -146,7 +146,7 @@ register:
 	                 /usr/share/ppd/cupsfilters/ricoh-sp200.ppd \
 	                 /usr/local/share/cups/model/ricoh-sp200.ppd \
 	                 /usr/pkg/share/cups/model/ricoh-sp200.ppd \
-	                 ppd/ricoh-sp200.ppd ricoh-sp200.ppd; do \
+	                 ppd/ricoh-sp200.ppd; do \
 		if [ -f "$$candidate" ]; then PPD_PATH="$$candidate"; break; fi; \
 	done; \
 	lpadmin -x $(PRINTER) 2>/dev/null || true; \

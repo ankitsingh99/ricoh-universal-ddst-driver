@@ -3,12 +3,12 @@
 *FileVersion: "1.1"
 *LanguageVersion: English
 *LanguageEncoding: ISOLatin1
-*PCFileName: "RICSP200.PPD"
+*PCFileName: "RICSP20L.PPD"
 *Product: "(Ricoh SP 200)"
 *Manufacturer: "Ricoh"
-*ModelName: "Ricoh SP 200"
-*ShortNickName: "Ricoh SP 200"
-*NickName: "Ricoh SP 200 DDST"
+*ModelName: "Ricoh SP 200 legacy JBIG"
+*ShortNickName: "Ricoh SP 200 legacy"
+*NickName: "Ricoh SP 200 (legacy JBIG)"
 *1284DeviceID: "MFG:Ricoh;MDL:SP 200;CMD:DDST;"
 *PSVersion: "(3010.000) 550"
 *LanguageLevel: "3"
