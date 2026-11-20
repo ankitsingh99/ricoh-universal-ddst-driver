@@ -226,6 +226,59 @@ STATIC const char* map_paper_name(unsigned width_pt, unsigned length_pt)
     return "A4";
 }
 
+/*
+ * macOS cgpdftoraster sends only the imageable area: cupsWidth/cupsHeight
+ * cover ImagingBoundingBox. Ghostscript (Linux) sends the full page. The
+ * printer always places the bitmap at the paper's top-left corner, so an
+ * imageable-area bitmap prints shifted up and left by the page margins.
+ * Pad it onto a full-page bitmap.
+ *
+ * Returns src unchanged when no padding is needed, a new bitmap otherwise,
+ * or NULL if that allocation fails.
+ */
+STATIC unsigned char* pad_to_page(unsigned char* src, unsigned src_stride,
+    unsigned w, unsigned h, const cups_page_header2_t* hdr,
+    unsigned* out_w, unsigned* out_h)
+{
+    unsigned xdpi = hdr->HWResolution[0];
+    unsigned ydpi = hdr->HWResolution[1];
+    const unsigned* bb = hdr->ImagingBoundingBox; /* points: left bottom right top */
+
+    *out_w = w;
+    *out_h = h;
+    if (!xdpi || !ydpi || bb[2] <= bb[0] || bb[3] <= bb[1] || bb[3] > hdr->PageSize[1])
+        return src;
+
+    unsigned full_w = (unsigned)(((unsigned long)hdr->PageSize[0] * xdpi + 36) / 72);
+    unsigned full_h = (unsigned)(((unsigned long)hdr->PageSize[1] * ydpi + 36) / 72);
+    unsigned left   = (unsigned)(((unsigned long)bb[0] * xdpi + 36) / 72);
+    unsigned top    = (unsigned)(((unsigned long)(hdr->PageSize[1] - bb[3]) * ydpi + 36) / 72);
+
+    /* Already a full-page bitmap, or the box doesn't fit the page: leave it. */
+    if ((w + 8 >= full_w && h + 8 >= full_h) || left + w > full_w || top + h > full_h)
+        return src;
+
+    unsigned dst_stride = (full_w + 7) / 8;
+    unsigned char* dst = (unsigned char*)CALLOC((size_t)dst_stride, full_h);
+    if (!dst)
+        return NULL;
+
+    for (unsigned y = 0; y < h; y++) {
+        const unsigned char* s = src + (size_t)y * src_stride;
+        unsigned char* d = dst + (size_t)(y + top) * dst_stride;
+        for (unsigned x = 0; x < w; x++) {
+            if (s[x >> 3] & (0x80 >> (x & 7))) {
+                unsigned dx = x + left;
+                d[dx >> 3] |= (unsigned char)(0x80 >> (dx & 7));
+            }
+        }
+    }
+
+    *out_w = full_w;
+    *out_h = full_h;
+    return dst;
+}
+
 int main(int argc, char* argv[])
 {
     int copies = 1;
@@ -350,7 +403,22 @@ int main(int argc, char* argv[])
             }
         }
 
-        write_page(bmp1, w, h, paper, page == 0, dpi, copies, tray);
+        unsigned pw, ph;
+        unsigned char* page_bmp = pad_to_page(bmp1, (bpp > 1) ? (w + 7) / 8 : stride,
+                                              w, h, &hdr, &pw, &ph);
+        if (!page_bmp) {
+            fprintf(stderr, "ERROR: rastertoricohddst: Out of memory padding page to full size\n");
+            if (bpp > 1) free(bmp1);
+            free(bmp);
+            cupsRasterClose(ras);
+            if (fd != 0) close(fd);
+            return 1;
+        }
+
+        write_page(page_bmp, pw, ph, paper, page == 0, dpi, copies, tray);
+        if (page_bmp != bmp1) {
+            free(page_bmp);
+        }
         if (bpp > 1) {
             free(bmp1);
         }

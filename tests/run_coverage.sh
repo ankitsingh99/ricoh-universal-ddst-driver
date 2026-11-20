@@ -56,6 +56,7 @@ echo "[2/5] Generating test raster streams..."
 "${TMP_DIR}/generate_test_raster" "${TMP_DIR}/legal.ras" legal
 "${TMP_DIR}/generate_test_raster" "${TMP_DIR}/duplex.ras" duplex
 "${TMP_DIR}/generate_test_raster" "${TMP_DIR}/gray.ras" gray
+"${TMP_DIR}/generate_test_raster" "${TMP_DIR}/imageable.ras" imageable
 "${TMP_DIR}/generate_test_raster" "${TMP_DIR}/gray3.ras" gray_cspace3
 "${TMP_DIR}/generate_test_raster" "${TMP_DIR}/rgb.ras" rgb
 "${TMP_DIR}/generate_test_raster" "${TMP_DIR}/empty.ras" empty
@@ -98,6 +99,8 @@ echo "[4/5] Executing test suite against rastertoricohddst..."
 "${TMP_DIR}/rastertoricohddst" 105 user "Gray Black" 0 "" "${TMP_DIR}/gray3.ras" > /dev/null
 "${TMP_DIR}/rastertoricohddst" 106 user "RGB Test" 1 "" "${TMP_DIR}/rgb.ras" > /dev/null
 "${TMP_DIR}/rastertoricohddst" 107 user "Empty Job" 1 "" "${TMP_DIR}/empty.ras" > /dev/null
+"${TMP_DIR}/rastertoricohddst" 108 user "macOS Imageable" 1 "" "${TMP_DIR}/imageable.ras" > "${TMP_DIR}/imageable_ddst.prn"
+grep -aq "PAPERWIDTH=4958" "${TMP_DIR}/imageable_ddst.prn"
 
 set +e
 "${TMP_DIR}/rastertoricohddst" 108 user "Missing" 1 "" "${TMP_DIR}/nonexistent.ras" > /dev/null 2>&1
@@ -105,7 +108,7 @@ set +e
 set -e
 
 # Run unit tests and error injection tests
-"${TMP_DIR}/test_unit_ddst" "${TMP_DIR}/mono.ras" "${TMP_DIR}/gray.ras"
+"${TMP_DIR}/test_unit_ddst" "${TMP_DIR}/mono.ras" "${TMP_DIR}/gray.ras" "${TMP_DIR}/imageable.ras"
 
 echo "Executing test suite against rastertoricohjbig..."
 "${TMP_DIR}/rastertoricohjbig" < "${TMP_DIR}/mono.ras" > /dev/null
@@ -114,6 +117,8 @@ echo "Executing test suite against rastertoricohjbig..."
 "${TMP_DIR}/rastertoricohjbig" 202 user "Legal Test" 1 "" "${TMP_DIR}/legal.ras" > /dev/null
 "${TMP_DIR}/rastertoricohjbig" 203 user "Letter Test" 3 "" "${TMP_DIR}/duplex.ras" > /dev/null
 "${TMP_DIR}/rastertoricohjbig" 204 user "Gray Test" 1 "" "${TMP_DIR}/gray.ras" > /dev/null
+"${TMP_DIR}/rastertoricohjbig" 208 user "macOS Imageable" 1 "" "${TMP_DIR}/imageable.ras" > "${TMP_DIR}/imageable_jbig.prn"
+grep -aq "PAPERWIDTH=4958" "${TMP_DIR}/imageable_jbig.prn"
 "${TMP_DIR}/rastertoricohjbig" 205 user "Gray3 Test" 1 "" "${TMP_DIR}/gray3.ras" > /dev/null
 "${TMP_DIR}/rastertoricohjbig" 206 user "RGB Test" 1 "" "${TMP_DIR}/rgb.ras" > /dev/null
 "${TMP_DIR}/rastertoricohjbig" 207 user "Empty Test" 1 "" "${TMP_DIR}/empty.ras" > /dev/null
@@ -123,7 +128,7 @@ set +e
 "${TMP_DIR}/rastertoricohjbig" 209 user "Corrupt" 1 "" "${TMP_DIR}/corrupt.ras" > /dev/null 2>&1
 set -e
 
-"${TMP_DIR}/test_unit_jbig" "${TMP_DIR}/mono.ras" "${TMP_DIR}/gray.ras"
+"${TMP_DIR}/test_unit_jbig" "${TMP_DIR}/mono.ras" "${TMP_DIR}/gray.ras" "${TMP_DIR}/imageable.ras"
 
 echo "Executing test suite against rastertoricohlhpl..."
 "${TMP_DIR}/rastertoricohlhpl" < "${TMP_DIR}/mono.ras" > /dev/null
