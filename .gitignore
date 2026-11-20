@@ -42,3 +42,5 @@ __pycache__/
 *.pyc
 *.pyo
 .venv/
+# Web portal runtime state
+.job_history.json
