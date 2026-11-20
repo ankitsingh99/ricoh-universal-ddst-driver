@@ -11,9 +11,11 @@ typedef struct {
     unsigned char* data;
     size_t         size;
     size_t         cap;
+    int            failed;
 } Buf;
 
 extern int test_fail_malloc;
+extern int test_fail_malloc_after;
 extern int test_fail_calloc;
 extern int test_fail_realloc;
 extern int test_fake_null_time;
@@ -21,7 +23,7 @@ extern int test_fake_null_time;
 void buf_cb(unsigned char* d, size_t n, void* arg);
 void write_job_header(int copies, int duplex, int tumble, const char* tray);
 unsigned long count_dots(const unsigned char* bmp, unsigned w, unsigned h);
-void write_page(unsigned char* bmp, unsigned w, unsigned h,
+int write_page(unsigned char* bmp, unsigned w, unsigned h,
     const char* paper, int first_page,
     unsigned dpi, int copies, const char* tray);
 const char* map_paper_name(unsigned width_pt, unsigned length_pt);
@@ -32,7 +34,7 @@ int main(int argc, char* argv[])
     printf("[*] Running rastertoricohddst unit & error injection tests...\n");
 
     /* Test 1: Buffer expansion and callback */
-    Buf b = { (unsigned char*)malloc(16), 0, 16 };
+    Buf b = { (unsigned char*)malloc(16), 0, 16, 0 };
     assert(b.data != NULL);
     unsigned char test_data[64];
     memset(test_data, 0x55, sizeof(test_data));
@@ -42,10 +44,15 @@ int main(int argc, char* argv[])
     free(b.data);
 
     /* Test 1b: realloc failure in buf_cb */
-    Buf b_fail = { (unsigned char*)malloc(16), 0, 16 };
+    Buf b_fail = { (unsigned char*)malloc(16), 0, 16, 0 };
     test_fail_realloc = 1;
     buf_cb(test_data, sizeof(test_data), &b_fail);
     test_fail_realloc = 0;
+    assert(b_fail.failed == 1);
+    assert(b_fail.size == 0);
+    /* Once failed, later (smaller) chunks must not be appended to a truncated stream */
+    buf_cb(test_data, 8, &b_fail);
+    assert(b_fail.size == 0);
     free(b_fail.data);
 
     /* Test 2: map_paper_name branches */
@@ -77,13 +84,25 @@ int main(int argc, char* argv[])
     /* Test 5: write_page with first_page = 0 and tray = NULL */
     unsigned char dummy_bmp[128];
     memset(dummy_bmp, 0xAA, sizeof(dummy_bmp));
-    write_page(dummy_bmp, 32, 32, "A4", 0, 600, 2, NULL);
-    write_page(dummy_bmp, 32, 32, "A4", 1, 600, 1, "TRAY1");
+    assert(write_page(dummy_bmp, 32, 32, "A4", 0, 600, 2, NULL) == 0);
+    assert(write_page(dummy_bmp, 32, 32, "A4", 1, 600, 1, "TRAY1") == 0);
 
     /* Test 5b: write_page malloc failure */
     test_fail_malloc = 1;
-    write_page(dummy_bmp, 32, 32, "A4", 1, 600, 1, "TRAY1");
+    assert(write_page(dummy_bmp, 32, 32, "A4", 1, 600, 1, "TRAY1") == -1);
     test_fail_malloc = 0;
+
+    /* Test 5c: realloc failure while encoding a page larger than the initial buffer */
+    {
+        unsigned bw = 4096, bh = 4096;
+        unsigned char* noise = malloc((size_t)bw / 8 * bh);
+        assert(noise);
+        for (size_t i = 0; i < (size_t)bw / 8 * bh; i++) noise[i] = (unsigned char)(rand() & 0xff);
+        test_fail_realloc = 1;
+        assert(write_page(noise, bw, bh, "A4", 1, 600, 1, "TRAY1") == -1);
+        test_fail_realloc = 0;
+        free(noise);
+    }
 
     /* Test 6: driver_main_ddst argv edge cases */
     freopen("/dev/null", "r", stdin);
@@ -102,6 +121,11 @@ int main(int argc, char* argv[])
         test_fail_malloc = 1;
         driver_main_ddst(7, argv_mem1);
         test_fail_malloc = 0;
+
+        /* Page bitmap allocates fine, page encode buffer fails: job must abort */
+        test_fail_malloc_after = 2;
+        assert(driver_main_ddst(7, argv_mem1) == 1);
+        assert(test_fail_malloc_after == 0);
     }
 
     if (argc >= 3) {

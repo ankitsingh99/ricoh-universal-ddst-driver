@@ -71,16 +71,19 @@ typedef struct {
     unsigned char* data;
     size_t         size;
     size_t         cap;
+    int            failed; /* set once an allocation fails; further data is dropped */
 } Buf;
 
 STATIC void buf_cb(unsigned char* d, size_t n, void* arg)
 {
     Buf* b = (Buf*)arg;
+    if (b->failed) return;
     if (b->size + n > b->cap) {
         size_t new_cap = (b->size + n) * 2;
         unsigned char* new_data = (unsigned char*)REALLOC(b->data, new_cap);
         if (!new_data) {
             fprintf(stderr, "ERROR: rastertoricohjbig: Out of memory expanding buffer\n");
+            b->failed = 1;
             return;
         }
         b->data = new_data;
@@ -158,21 +161,37 @@ STATIC unsigned long count_dots(const unsigned char* bmp, unsigned w, unsigned h
  *   Without the per-page PAGESTATUS=END the firmware treats every subsequent
  *   IMAGELEN as another chunk of the same page and never ejects it.
  */
-STATIC void write_page(unsigned char* bmp, unsigned w, unsigned h,
+STATIC int write_page(unsigned char* bmp, unsigned w, unsigned h,
     const char* paper, int first_page,
     unsigned dpi, int copies)
 {
     size_t initial_cap = (w * h / 16) + 4096;
     if (initial_cap < (1 << 17)) initial_cap = (1 << 17);
 
-    Buf buf = { (unsigned char*)MALLOC(initial_cap), 0, initial_cap };
+    Buf buf = { (unsigned char*)MALLOC(initial_cap), 0, initial_cap, 0 };
     if (!buf.data) {
         fprintf(stderr, "ERROR: rastertoricohjbig: Out of memory allocating page buffer\n");
-        return;
+        return -1;
     }
 
     struct jbg_enc_state enc;
     unsigned char* planes[1] = { bmp };
+
+    /* Encode first: if compression runs out of memory, abort before any
+     * PJL for this page reaches the printer. */
+    jbg_enc_init(&enc, w, h, 1, planes, buf_cb, &buf);
+    /* jbigkit stores the order and options arguments directly into BIE
+     * bytes 18 and 19. Both must match the Windows driver's output exactly:
+     * byte 18 = 0x03, byte 19 = 0x48. Sending byte 19 = 0x08 causes the
+     * printer to warm up but refuse to pull the page. */
+    jbg_enc_options(&enc, 0x03, 0x48, 128, 0, 0);
+    jbg_enc_out(&enc);
+    jbg_enc_free(&enc);
+
+    if (buf.failed) {
+        free(buf.data);
+        return -1;
+    }
 
     /* Pages 2+ need their own PAGESTATUS=START + media header.
      * Page 1 inherits these from the job header. */
@@ -195,15 +214,6 @@ STATIC void write_page(unsigned char* bmp, unsigned w, unsigned h,
         "@PJL SET RESOLUTION=%u\r\n",
         paper, w, h, dpi);
 
-    jbg_enc_init(&enc, w, h, 1, planes, buf_cb, &buf);
-    /* jbigkit stores the order and options arguments directly into BIE
-     * bytes 18 and 19. Both must match the Windows driver's output exactly:
-     * byte 18 = 0x03, byte 19 = 0x48. Sending byte 19 = 0x08 causes the
-     * printer to warm up but refuse to pull the page. */
-    jbg_enc_options(&enc, 0x03, 0x48, 128, 0, 0);
-    jbg_enc_out(&enc);
-    jbg_enc_free(&enc);
-
     fprintf(stdout, "@PJL SET IMAGELEN=%zu\r\n", buf.size);
     fwrite(buf.data, 1, buf.size, stdout);
 
@@ -218,6 +228,7 @@ STATIC void write_page(unsigned char* bmp, unsigned w, unsigned h,
     fflush(stdout);
 
     free(buf.data);
+    return 0;
 }
 
 int main(int argc, char* argv[])
@@ -336,11 +347,17 @@ int main(int argc, char* argv[])
             }
         }
 
-        write_page(bmp1, w, h, paper, page == 0, dpi, copies);
+        int page_rc = write_page(bmp1, w, h, paper, page == 0, dpi, copies);
         if (bpp > 1) {
             free(bmp1);
         }
         free(bmp);
+        if (page_rc != 0) {
+            fprintf(stderr, "ERROR: rastertoricohjbig: Aborting job, page %d could not be encoded\n", page + 1);
+            cupsRasterClose(ras);
+            if (fd != 0) close(fd);
+            return 1;
+        }
 
         page++;
         fprintf(stderr, "PAGE: %d %d\n", page, copies);

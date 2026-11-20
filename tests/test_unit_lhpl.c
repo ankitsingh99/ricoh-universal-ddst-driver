@@ -12,6 +12,7 @@ typedef struct {
     unsigned char* data;
     size_t         size;
     size_t         cap;
+    int            failed;
 } Buf;
 
 extern int test_fail_malloc;
@@ -33,7 +34,7 @@ int main(int argc, char* argv[])
     printf("[*] Running rastertoricohlhpl unit & error injection tests...\n");
 
     /* Test 1: Buffer expansion and callback */
-    Buf b = { (unsigned char*)malloc(16), 0, 16 };
+    Buf b = { (unsigned char*)malloc(16), 0, 16, 0 };
     assert(b.data != NULL);
     unsigned char test_data[64];
     memset(test_data, 0x55, sizeof(test_data));
@@ -43,10 +44,15 @@ int main(int argc, char* argv[])
     free(b.data);
 
     /* Test 1b: realloc failure in jbig_buf_cb */
-    Buf b_fail = { (unsigned char*)malloc(16), 0, 16 };
+    Buf b_fail = { (unsigned char*)malloc(16), 0, 16, 0 };
     test_fail_realloc = 1;
     jbig_buf_cb(test_data, sizeof(test_data), &b_fail);
     test_fail_realloc = 0;
+    assert(b_fail.failed == 1);
+    assert(b_fail.size == 0);
+    /* Once failed, later (smaller) chunks must not be appended to a truncated stream */
+    jbig_buf_cb(test_data, 8, &b_fail);
+    assert(b_fail.size == 0);
     free(b_fail.data);
 
     /* Test 2: XOR checksum calculation */
@@ -91,6 +97,13 @@ int main(int argc, char* argv[])
         rc = driver_main_lhpl(7, argv_jbig_calloc_fail);
         assert(rc == 1);
         test_fail_calloc = 0;
+
+        /* Realloc failure while JBIG-encoding: job must abort, not emit a truncated page */
+        test_fail_realloc = 1;
+        char* argv_realloc_fail[] = { "rastertoricohlhpl", "1", "user", "Title", "1", "", mono_ras };
+        rc = driver_main_lhpl(7, argv_realloc_fail);
+        assert(rc == 1);
+        test_fail_realloc = 0;
 
         /* Test with gray_ras */
         char* argv_gray[] = { "rastertoricohlhpl", "1", "user", "Title", "1", "", gray_ras };
